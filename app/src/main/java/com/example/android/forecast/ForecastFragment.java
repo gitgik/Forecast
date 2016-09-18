@@ -21,8 +21,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +41,7 @@ public class ForecastFragment extends Fragment {
     }
 
 
-    private ArrayAdapter<String> forecastAdapter;
+    public ArrayAdapter<String> forecastAdapter;
 
 
     @Override
@@ -104,14 +102,23 @@ public class ForecastFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
+        @Override
+        protected void onPostExecute(String[] results) {
+            if (results != null) {
+                forecastAdapter.clear();
+                for (String dayForecastString : results) {
+                    forecastAdapter.add(dayForecastString);
+                }
+            }
+        }
 
         /*
          * Converts Unix timestamp to readable date
-         */
+        */
         private String getReadableDataString (long time) {
             Date date = new Date(time * 1000);
             SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
@@ -177,7 +184,7 @@ public class ForecastFragment extends Fragment {
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
@@ -243,6 +250,12 @@ public class ForecastFragment extends Fragment {
                         Log.e(LOG_TAG, "CLOSING STREAM", e);
                     }
                 }
+            }
+
+            try {
+                return getWeatherFromJson(forecastJsonString, 7);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
             return null;
         }
