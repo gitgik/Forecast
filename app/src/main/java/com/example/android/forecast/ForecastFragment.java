@@ -23,8 +23,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -100,6 +107,74 @@ public class ForecastFragment extends Fragment {
     public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+
+
+        /*
+         * Converts Unix timestamp to readable date
+         */
+        private String getReadableDataString (long time) {
+            Date date = new Date(time * 1000);
+            SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
+            return format.format(date).toString();
+        }
+
+        /*
+         * Format weather's high and low temperature
+         */
+        private String formatHighLows (double high, double low) {
+            long roundedHigh = Math.round(high);
+            long roundedLow = Math.round(low);
+
+            String result = roundedHigh + "/" + roundedLow;
+            return result;
+        }
+
+        /*
+         * Format json string to relevant data
+         */
+        private String [] getWeatherFromJson(String jsonString, int days) throws JSONException {
+            // JSON objects that need to be extracted
+            final String LIST = "list";
+            final String WEATHER = "weather";
+            final String TEMPERATURE = "temp";
+            final String MAX = "max";
+            final String MIN = "min";
+            final String DATETIME = "dt";
+            final String DESCRIPTION = "main";
+
+            JSONObject forecastJson = new JSONObject(jsonString);
+            JSONArray weatherArray = forecastJson.getJSONArray(LIST);
+
+            String[] resultStrings = new String[days];
+            for (int i = 0; i < weatherArray.length(); i++) {
+                String day, description, highLow;
+
+                // Get json object data representing the day
+                JSONObject dayForecast = weatherArray.getJSONObject(i);
+
+                long dateTime = dayForecast.getLong(DATETIME);
+                day = getReadableDataString(dateTime);
+
+                // description is in child array "weather"
+                JSONObject weatherObject = dayForecast.getJSONArray(WEATHER).getJSONObject(0);
+                description = weatherObject.getString(DESCRIPTION);
+
+                // Temperature are in object called "temp"
+                JSONObject temperatureObject = dayForecast.getJSONObject(TEMPERATURE);
+                double highTemperature = temperatureObject.getDouble(MAX);
+                double lowTemperature = temperatureObject.getDouble(MIN);
+
+                highLow = formatHighLows(highTemperature, lowTemperature);
+
+                resultStrings[i] = day + " –– " + description + " –– " + highLow;
+            }
+
+            for (String s : resultStrings) {
+                Log.v(LOG_TAG, "FORECAST ENTRY: " + s);
+            }
+
+            return resultStrings;
+        }
 
         @Override
         protected Void doInBackground(String... params) {
