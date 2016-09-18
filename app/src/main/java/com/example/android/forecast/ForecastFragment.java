@@ -1,8 +1,10 @@
 package com.example.android.forecast;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.util.LogWriter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -88,28 +90,43 @@ public class ForecastFragment extends Fragment {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
             FetchWeatherTask fetch = new FetchWeatherTask();
-            fetch.execute();
+            fetch.execute("Nairobi");
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public class FetchWeatherTask extends AsyncTask<Void, Void, Void> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(String... params) {
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
             // Will store the raw JSON response as a string.
             String forecastJsonString = null;
+            String apiKey = "de07b800a0f30d675a6ceb7d9b30ce11";
 
             try {
                 // Construct URL for the OpenWeatherMap API
-                URL url = new URL("http://api.openwheathermap.org/data/2.5/forecast/daily?q=94043");
+                final String QUERY_PARAM = "q";
+                final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
+                final String FORMAT = "mode";
+                final String UNITS = "units";
+                final String DAYS = "cnt";
+                final String API_KEY = "APPID";
+
+                Uri buildUri = Uri.parse(FORECAST_URL).buildUpon()
+                        .appendQueryParameter(QUERY_PARAM, params[0])
+                        .appendQueryParameter(FORMAT, "json")
+                        .appendQueryParameter(UNITS, "metric")
+                        .appendQueryParameter(DAYS, "7")
+                        .appendQueryParameter(API_KEY, apiKey).build();
+
+                URL url = new URL(buildUri.toString());
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
@@ -133,6 +150,8 @@ public class ForecastFragment extends Fragment {
                     return  null;
                 }
                 forecastJsonString = buffer.toString();
+                // log the json string
+                Log.v(LOG_TAG, "JSON: " + forecastJsonString);
 
             } catch (IOException e) {
                 Log.e(LOG_TAG, "NETWORK ERROR: ", e);
