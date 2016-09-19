@@ -9,5 +9,11 @@
     tools:context="com.example.android.forecast.DetailActivityFragment"
     tools:showIn="@layout/activity_detail">
 
+    <TextView
+        android:id="@+id/detail_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text=""
+        android:textAppearance="?android:textAppearanceMedium"/>
 
 </RelativeLayout>
