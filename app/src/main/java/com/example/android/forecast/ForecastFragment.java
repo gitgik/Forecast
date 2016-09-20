@@ -113,6 +113,12 @@ public class ForecastFragment extends Fragment {
             return true;
         }
 
+
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(getActivity(), SettingsActivity.class);
+            startActivity(intent);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
