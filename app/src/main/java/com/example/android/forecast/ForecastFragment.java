@@ -59,9 +59,6 @@ public class ForecastFragment extends Fragment {
 
 
         String[] forecastArray = {
-                "Today - sunny - 99/67",
-                "Tomorrow - cloudy - 75/61",
-                "Weds - heavy rain - 71/56"
         };
 
         List<String> weekForecast = new ArrayList<String>(Arrays.asList(forecastArray));
@@ -72,6 +69,9 @@ public class ForecastFragment extends Fragment {
                 R.layout.list_item_forecast, // Id of list-item layout (list_item_forecast.xml)
                 R.id.list_item_forecast_textview, // Id of text view
                 weekForecast);
+
+        FetchWeatherTask fetch = new FetchWeatherTask();
+        fetch.execute("Nairobi");
 
         // Get a reference to list view and attach the adapter to it.
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
