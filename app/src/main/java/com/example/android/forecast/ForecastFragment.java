@@ -31,7 +31,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -54,16 +53,27 @@ public class ForecastFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+
+    private void updateWeather () {
+        FetchWeatherTask fetch = new FetchWeatherTask();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        fetch.execute(location);
+    }
+
+    @Override
+    public void onStart () {
+        super .onStart();
+        updateWeather();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
 
-
-        String[] forecastArray = {
-        };
-
-        List<String> weekForecast = new ArrayList<String>(Arrays.asList(forecastArray));
+        // Empty array list
+        List<String> weekForecast = new ArrayList<String>();
 
         // Array adapter take raw data and populate the ListView it is attached to.
         forecastAdapter = new ArrayAdapter<String>(
@@ -72,8 +82,7 @@ public class ForecastFragment extends Fragment {
                 R.id.list_item_forecast_textview, // Id of text view
                 weekForecast);
 
-        FetchWeatherTask fetch = new FetchWeatherTask();
-        fetch.execute("Nairobi");
+
 
         // Get a reference to list view and attach the adapter to it.
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
@@ -156,6 +165,24 @@ public class ForecastFragment extends Fragment {
          * Format weather's high and low temperature
          */
         private String formatHighLows (double high, double low) {
+            // Data is felt in celsius by default
+            // converting to Fahrenheit is done here
+
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(
+                    getActivity());
+            String temperatureUnitType = sharedPrefs.getString(
+                    getString(R.string.pref_units_key),
+                    getString(R.string.pref_units_metric)
+            );
+
+            if (temperatureUnitType.equals(getString(R.string.pref_units_imperial))) {
+                high = (high * 1.8) + 32;
+                low = (low * 1.8) + 32;
+            } else if (!temperatureUnitType.equals(
+                    getString(R.string.pref_units_metric))) {
+                Log.d(LOG_TAG, "Unit type not found: " + temperatureUnitType);
+            }
+
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 

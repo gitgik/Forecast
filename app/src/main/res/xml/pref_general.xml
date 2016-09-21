@@ -16,4 +16,11 @@
     <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
          dismiss it. -->
 
+    <ListPreference
+        android:title="@string/pref_units_label"
+        android:defaultValue="@string/pref_units_metric"
+        android:key="@string/pref_units_key"
+        android:entries="@array/pref_units_options"
+        android:entryValues="@array/pref_units_values" />
+
 </PreferenceScreen>
