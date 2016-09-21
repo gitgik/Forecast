@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:title="@string/pref_location_lable"
+        android:key="@string/pref_location_key"
+        android:summary="Enter the city name"
+        android:dialogTitle="Enter your city name"
+        android:defaultValue="@string/pref_location_default">
+    </EditTextPreference>
+</PreferenceScreen>
