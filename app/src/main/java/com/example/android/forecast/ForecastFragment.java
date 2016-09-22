@@ -143,7 +143,7 @@ public class ForecastFragment extends Fragment {
                     getActivity());
             String temperatureUnitType = sharedPrefs.getString(
                     getString(R.string.pref_units_key),
-                    getString(R.string.pref_units_metric)
+                    getString(R.string.pref_units_imperial)
             );
 
             if (temperatureUnitType.equals(getString(R.string.pref_units_imperial))) {
