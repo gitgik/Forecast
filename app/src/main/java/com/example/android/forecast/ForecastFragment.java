@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -110,34 +109,6 @@ public class ForecastFragment extends Fragment {
         inflater.inflate(R.menu.menu_main, menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_refresh) {
-            FetchWeatherTask fetch = new FetchWeatherTask();
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
-                    getActivity());
-            String location = prefs.getString(
-                    getString(R.string.pref_location_key),
-                    getString(R.string.pref_location_default));
-            fetch.execute(location);
-            return true;
-        }
-
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(getActivity(), SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
@@ -179,7 +150,7 @@ public class ForecastFragment extends Fragment {
                 high = (high * 1.8) + 32;
                 low = (low * 1.8) + 32;
             } else if (!temperatureUnitType.equals(
-                    getString(R.string.pref_units_metric))) {
+                    getString(R.string.pref_units_imperial))) {
                 Log.d(LOG_TAG, "Unit type not found: " + temperatureUnitType);
             }
 
