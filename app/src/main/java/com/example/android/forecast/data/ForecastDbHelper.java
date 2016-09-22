@@ -44,6 +44,19 @@ public class ForecastDbHelper extends SQLiteOpenHelper {
                 // To ensure that we have one weather entry per day.
                 "UNIQUE (" + WeatherEntry.COLUMN_DATETEXT + ", " +
                 WeatherEntry.COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";
+
+        final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " +
+                LocationEntry.TABLE_NAME + "(" +
+                LocationEntry._ID + " INTEGER PRIMARY KEY," +
+                LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, " +
+                LocationEntry.COLUMN_CITY_NAME + " TEXT NOT NULL, " +
+                LocationEntry.COLUMN_LATITUDE + " REAL NOT NULL, " +
+                LocationEntry.COLUMN_LONGITUDE + " REAL NOT NULL, " +
+
+                // Create a unique constraint with replace strategy
+                // To ensure that we have one weather entry per day.
+                "UNIQUE (" + LocationEntry.COLUMN_LOCATION_SETTING +
+                ") ON CONFLICT REPLACE);";
     }
 
     @Override
