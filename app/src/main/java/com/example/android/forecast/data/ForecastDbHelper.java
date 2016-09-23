@@ -57,10 +57,15 @@ public class ForecastDbHelper extends SQLiteOpenHelper {
                 // To ensure that we have one weather entry per day.
                 "UNIQUE (" + LocationEntry.COLUMN_LOCATION_SETTING +
                 ") ON CONFLICT REPLACE);";
+
+        db.execSQL(SQL_CREATE_FORECAST_TABLE);
+        db.execSQL(SQL_CREATE_LOCATION_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        db.execSQL("DROP TABLE IF EXISTS " + LocationEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + WeatherEntry.TABLE_NAME);
+        onCreate(db);
     }
 }
