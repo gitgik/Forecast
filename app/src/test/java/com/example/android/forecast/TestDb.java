@@ -7,6 +7,7 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
+import com.example.android.forecast.data.ForecastContract.WeatherEntry;
 import com.example.android.forecast.data.ForecastDbHelper;
 
 
@@ -26,7 +27,7 @@ public class TestDb extends AndroidTestCase {
      db.close();
     }
 
-    public void testInsertAndReadDb() {
+    public void testLocationInsertAndReadDb() {
         // Test data to be inserted into tables
         String testName = "Mountain View";
         String testLocationSetting = "99705";
@@ -76,11 +77,11 @@ public class TestDb extends AndroidTestCase {
             // Get the value of each column using their column index
             int locationIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LOCATION_SETTING);
             String location = cursor.getString(locationIndex);
-            Log.v(LOG_TAG, "Location index: " + location);
+            Log.d(LOG_TAG, "Location index: " + location);
 
             int nameIndex = cursor.getColumnIndex(LocationEntry.COLUMN_CITY_NAME);
             String name = cursor.getString(nameIndex);
-            Log.v(LOG_TAG, "Name index: " + name);
+            Log.d(LOG_TAG, "Name index: " + name);
 
             int latIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LATITUDE);
             String latitude = cursor.getString(latIndex);
@@ -93,6 +94,67 @@ public class TestDb extends AndroidTestCase {
             assertEquals(testLocationSetting, locationIndex);
             assertEquals(testLatitude, latitude);
             assertEquals(testLongitude, longitude);
+
+
+            // Test weather data
+            ContentValues weatherValues = new ContentValues();
+            weatherValues.put(WeatherEntry.COLUMN_LOC_KEY, locationRowId);
+            weatherValues.put(WeatherEntry.COLUMN_DATETEXT, "1474621881337");
+            weatherValues.put(WeatherEntry.COLUMN_DEGREES, 1.1);
+            weatherValues.put(WeatherEntry.COLUMN_HUMIDITY, 1.2);
+            weatherValues.put(WeatherEntry.COLUMN_PRESSURE, 1.3);
+            weatherValues.put(WeatherEntry.COLUMN_MAX_TEMP, 75);
+            weatherValues.put(WeatherEntry.COLUMN_MIN_TEMP, 65);
+            weatherValues.put(WeatherEntry.COLUMN_SHORT_DESC, "HailStorms");
+            weatherValues.put(WeatherEntry.COLUMN_WIND_SPEED, 5.5);
+            weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, 300);
+
+            long weatherRowId;
+            weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
+            assertTrue(weatherRowId != -1);
+
+            Cursor weatherCursor = db.query(
+                    WeatherEntry.TABLE_NAME,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            if (weatherCursor.moveToFirst()) {
+
+                int dateIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT);
+                String date = cursor.getString(dateIndex);
+
+                int degreesIndex =  weatherCursor.getColumnIndex(WeatherEntry.COLUMN_DEGREES);
+                String degrees = weatherCursor.getString(degreesIndex);
+
+                int humidityIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_HUMIDITY);
+                String humid = weatherCursor.getString(humidityIndex);
+
+                int pressureIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_PRESSURE);
+                String pressure = weatherCursor.getString(pressureIndex);
+
+                int maxIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP);
+                String max = weatherCursor.getString(maxIndex);
+
+                int minIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP);
+                String min = weatherCursor.getString(minIndex);
+
+                int shortDescIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC);
+                String shortDesc = weatherCursor.getString(shortDescIndex);
+
+                int windIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_WIND_SPEED);
+                String wind = weatherCursor.getString(windIndex);
+
+                int weatherIdIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_WEATHER_ID);
+                String weather_id = weatherCursor.getString(weatherIdIndex);
+
+            } else {
+                fail("No weather data returned");
+            }
 
         } else {
             fail("No values returned");
