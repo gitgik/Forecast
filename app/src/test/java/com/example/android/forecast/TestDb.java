@@ -29,7 +29,7 @@ public class TestDb extends AndroidTestCase {
     public void testInsertAndReadDb() {
         // Test data to be inserted into tables
         String testName = "Mountain View";
-        String testLocationString = "99705";
+        String testLocationSetting = "99705";
         double testLatitude = 64.772;
         double testLongitude = 147.355;
 
@@ -39,7 +39,7 @@ public class TestDb extends AndroidTestCase {
         // Create a new map of values, with column names as keys
         ContentValues values = new ContentValues();
         values.put(LocationEntry.COLUMN_CITY_NAME, testName);
-        values.put(LocationEntry.COLUMN_LOCATION_SETTING, testLocationString);
+        values.put(LocationEntry.COLUMN_LOCATION_SETTING, testLocationSetting);
         values.put(LocationEntry.COLUMN_LATITUDE, testLatitude);
         values.put(LocationEntry.COLUMN_LONGITUDE, testLongitude);
 
@@ -71,5 +71,31 @@ public class TestDb extends AndroidTestCase {
                 null, // Columns to filter by row groups
                 null  // set order
         );
+
+        if (cursor.moveToFirst()) { // move cursor to first row
+            // Get the value of each column using their column index
+            int locationIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LOCATION_SETTING);
+            String location = cursor.getString(locationIndex);
+            Log.v(LOG_TAG, "Location index: " + location);
+
+            int nameIndex = cursor.getColumnIndex(LocationEntry.COLUMN_CITY_NAME);
+            String name = cursor.getString(nameIndex);
+            Log.v(LOG_TAG, "Name index: " + name);
+
+            int latIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LATITUDE);
+            String latitude = cursor.getString(latIndex);
+
+            int longIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LONGITUDE);
+            String longitude = cursor.getString(longIndex);
+
+            // Assert retrieved location data equals test data
+            assertEquals(testName, name);
+            assertEquals(testLocationSetting, locationIndex);
+            assertEquals(testLatitude, latitude);
+            assertEquals(testLongitude, longitude);
+
+        } else {
+            fail("No values returned");
+        }
     }
 }
