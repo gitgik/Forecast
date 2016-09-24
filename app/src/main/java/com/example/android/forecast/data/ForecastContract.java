@@ -1,5 +1,7 @@
 package com.example.android.forecast.data;
 
+import android.content.ContentUris;
+import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
@@ -7,10 +9,30 @@ import android.provider.BaseColumns;
  */
 
 public class ForecastContract {
+    // Content URI made from the CONTENT AUTHORITY
+    public static final String CONTENT_AUTHORITY = "com.example.android.forecast.app";
+    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+
+    // Possible paths to be appended to the URI
+    public static final String WEATHER_PATH = "weather";
+    public static final String LOCATION_PATH = "location";
+
+
     /**
      * Inner class that defines the table contents of forecast table
      */
     public static final class WeatherEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI =  BASE_CONTENT_URI.buildUpon()
+                .appendPath(WEATHER_PATH).build();
+
+        // Mime type prefixes that indicates type of data to be returned
+        // (DIR or SINGLE ITEM)
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
+        public  static final  String CONTENT_TYPE_DIR =
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
+
 
         public static final String TABLE_NAME = "forecast";
 
@@ -40,12 +62,51 @@ public class ForecastContract {
         public static final String COLUMN_WIND_SPEED = "wind";
         // Degrees as a float
         public static final String COLUMN_DEGREES = "degrees";
+
+        public static Uri buildWeatherUri (long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildWeatherLocation (String locationSetting) {
+            return CONTENT_URI.buildUpon().appendPath(locationSetting).build();
+        }
+
+        public static Uri buildWeatherLocationWithStartDate (String locationSetting, String startDate) {
+             return CONTENT_URI.buildUpon().appendPath(locationSetting).appendQueryParameter(COLUMN_DATETEXT, startDate).build();
+        }
+
+        public static Uri buildWeatherLocationWithDate (String locationSetting, String date) {
+            return CONTENT_URI.buildUpon().appendPath(locationSetting).appendPath(date).build();
+        }
+
+        public static String getLocationSettingFromUri (Uri uri) {
+            // get decoded path segments: location setting
+            return uri.getPathSegments().get(2);
+        }
+
+        public static String getStartDateFromUri (Uri uri) {
+            // Search the query string for the first value with this key
+            return uri.getQueryParameter(COLUMN_DATETEXT);
+        }
+
+
     }
 
     /**
      * Inner class that defines the table contents of the location table
      */
     public static  final class LocationEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI =  BASE_CONTENT_URI.buildUpon()
+                .appendPath(LOCATION_PATH).build();
+
+        // Mime type prefixes that indicates type of data to be returned
+        // (DIR or SINGLE ITEM)
+        public static final String CONTENT_TYPE =
+                "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + LOCATION_PATH;
+        public  static final  String CONTENT_TYPE_DIR =
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + LOCATION_PATH;
+
         // Table name
         public static final String TABLE_NAME = "location";
 
