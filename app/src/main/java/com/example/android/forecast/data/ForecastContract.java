@@ -100,6 +100,10 @@ public class ForecastContract {
         public static final Uri CONTENT_URI =  BASE_CONTENT_URI.buildUpon()
                 .appendPath(LOCATION_PATH).build();
 
+        public static Uri buildLocationUri (long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
         // Mime type prefixes that indicates type of data to be returned
         // (DIR or SINGLE ITEM)
         public static final String CONTENT_TYPE =
