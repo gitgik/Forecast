@@ -18,16 +18,40 @@ import java.util.Set;
  * Created by nerd on 22/09/2016.
  */
 
-public class TestDb extends AndroidTestCase {
+public class TestProvider extends AndroidTestCase {
 
-    public static final String LOG_TAG = TestDb.class.getSimpleName();
+    public static final String LOG_TAG = TestProvider.class.getSimpleName();
 
-    public void testCreateDb() throws Throwable {
+    public void testDeleteDb() throws Throwable {
      mContext.deleteDatabase(ForecastDbHelper.DATABASE_NAME);
-     SQLiteDatabase db = new ForecastDbHelper(
-             this.mContext).getWritableDatabase();
-     assertEquals(true, db.isOpen());
-     db.close();
+    }
+
+    public void testGetType () {
+
+        String type = mContext.getContentResolver().getType(WeatherEntry.CONTENT_URI);
+        // vdn.android.cursor.dir/com.example.android.forecast/weather
+        assertEquals(WeatherEntry.CONTENT_TYPE_DIR, type);
+
+        // content://com.example.android.forecast/weather/94074
+        String testLocation = "94074";
+        // vdn.android.cursor.dir/com.example.android.forecast/94074
+        type = mContext.getContentResolver().getType(WeatherEntry.buildWeatherLocation(testLocation));
+        assertEquals(WeatherEntry.CONTENT_TYPE_DIR, type);
+
+        // content://com.example.android.forecast/weather/94074/20160902
+        String testDate = "20160902";
+        // vdn.android.cursor.dir/com.example.android.forecast/20160902
+        type = mContext.getContentResolver().getType(WeatherEntry.buildWeatherLocationWithDate(testLocation, testDate));
+        assertEquals(WeatherEntry.CONTENT_TYPE_ITEM, type);
+
+        type = mContext.getContentResolver().getType(LocationEntry.CONTENT_URI);
+        // vnd.android.cursor.dir/com.example.android.forecast/location
+        assertEquals(LocationEntry.CONTENT_TYPE_DIR, type);
+
+        type = mContext.getContentResolver().getType(LocationEntry.buildLocationUri(1L));
+        // vnd.android.cursor.dir/com.example.android.forecast/location
+        assertEquals(LocationEntry.CONTENT_TYPE_ITEM, type);
+
     }
 
 

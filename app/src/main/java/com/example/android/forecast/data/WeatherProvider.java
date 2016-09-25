@@ -48,7 +48,52 @@ public class WeatherProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        return null;
+        // Define a switch that determines the kind of request to be made given a URI
+        Cursor retCursor;
+        switch (uriMatcher.match(uri)) {
+            case WEATHER_WITH_LOCATION_AND_DATE:
+            {
+                retCursor = null;
+                break;
+            }
+
+            // Weather
+            case WEATHER_WITH_LOCATION: {
+                retCursor = null;
+                break;
+            }
+
+            case WEATHER: {
+                retCursor = openHelper.getReadableDatabase().query(
+                        ForecastContract.WeatherEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+            case LOCATION_ID: {
+                retCursor = null;
+                break;
+            }
+            case LOCATION: {
+                retCursor = null;
+                break;
+            }
+
+            default:
+                throw new UnsupportedOperationException("Unknown URI: " + uri);
+
+        }
+        // set notification uri to be the one passed into this function
+        // this causes the cursor to register a content observer to watch for changes
+        // that happen to the URI
+        retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return retCursor;
     }
 
     /**
@@ -76,7 +121,9 @@ public class WeatherProvider extends ContentProvider {
                 return ForecastContract.LocationEntry.CONTENT_TYPE_DIR;
 
             case LOCATION_ID:
+                // "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH
                 return ForecastContract.LocationEntry.CONTENT_TYPE_ITEM;
+
             default:
                 throw new UnsupportedOperationException("Unknown URI: " + uri);
         }
