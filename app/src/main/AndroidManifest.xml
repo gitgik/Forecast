@@ -48,7 +48,7 @@
                 android:value="com.example.android.forecast.MainActivity" />
         </activity>
         <provider
-            android:authorities="com.example.android.forecast.android.app"
+            android:authorities="com.example.android.forecast"
             android:name=".data.WeatherProvider" />
     </application>
 

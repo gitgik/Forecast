@@ -28,9 +28,9 @@ public class ForecastContract {
 
         // Mime type prefixes that indicates type of data to be returned
         // (DIR or SINGLE ITEM)
-        public static final String CONTENT_TYPE =
+        public static final String CONTENT_TYPE_DIR =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
-        public  static final  String CONTENT_TYPE_DIR =
+        public  static final  String CONTENT_TYPE_ITEM =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
 
 
@@ -106,9 +106,9 @@ public class ForecastContract {
 
         // Mime type prefixes that indicates type of data to be returned
         // (DIR or SINGLE ITEM)
-        public static final String CONTENT_TYPE =
+        public static final String CONTENT_TYPE_DIR =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + LOCATION_PATH;
-        public  static final  String CONTENT_TYPE_DIR =
+        public  static final  String CONTENT_TYPE_ITEM =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + LOCATION_PATH;
 
         // Table name

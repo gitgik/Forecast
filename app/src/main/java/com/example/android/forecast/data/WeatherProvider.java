@@ -32,14 +32,17 @@ public class WeatherProvider extends ContentProvider {
         matcher.addURI(authority, ForecastContract.WEATHER_PATH + "/*/*", WEATHER_WITH_LOCATION_AND_DATE);
 
         matcher.addURI(authority, ForecastContract.LOCATION_PATH, LOCATION);
-        // Use # since the id is a long type
+        // Use # since the id is a   long type
         matcher.addURI(authority, ForecastContract.LOCATION_PATH + "/#", LOCATION_ID);
         return matcher;
     }
 
+    private ForecastDbHelper openHelper;
+
     @Override
     public boolean onCreate() {
-        return false;
+        openHelper = new ForecastDbHelper(getContext());
+        return true;
     }
 
     @Nullable
@@ -48,10 +51,35 @@ public class WeatherProvider extends ContentProvider {
         return null;
     }
 
-    @Nullable
+    /**
+     * This function is used to return the mime type
+     * associated with the data at the given URI
+     * returns: Mime type in String format
+     */
     @Override
     public String getType(Uri uri) {
-        return null;
+        final int match = uriMatcher.match(uri);
+        switch (match) {
+            case WEATHER_WITH_LOCATION_AND_DATE:
+                // "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH
+                return ForecastContract.WeatherEntry.CONTENT_TYPE_ITEM;
+
+            case WEATHER_WITH_LOCATION:
+                // "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH
+                return ForecastContract.WeatherEntry.CONTENT_TYPE_DIR;
+
+            case WEATHER:
+                // "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH
+                return ForecastContract.WeatherEntry.CONTENT_TYPE_DIR;
+
+            case LOCATION:
+                return ForecastContract.LocationEntry.CONTENT_TYPE_DIR;
+
+            case LOCATION_ID:
+                return ForecastContract.LocationEntry.CONTENT_TYPE_ITEM;
+            default:
+                throw new UnsupportedOperationException("Unknown URI: " + uri);
+        }
     }
 
     @Nullable
