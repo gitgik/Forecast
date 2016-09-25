@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 
@@ -13,6 +14,7 @@ import android.support.annotation.Nullable;
  */
 
 public class WeatherProvider extends ContentProvider {
+
 
     private static final int WEATHER = 100;
     private static final int WEATHER_WITH_LOCATION = 101;
@@ -40,6 +42,56 @@ public class WeatherProvider extends ContentProvider {
 
     private ForecastDbHelper openHelper;
 
+    private static final SQLiteQueryBuilder locationSettingQueryBuilder;
+
+    static {
+        // Define the join and build it with the query builder.
+        locationSettingQueryBuilder = new SQLiteQueryBuilder();
+        locationSettingQueryBuilder.setTables(
+                ForecastContract.WeatherEntry.TABLE_NAME + " INNER JOIN " +
+                        ForecastContract.LocationEntry.TABLE_NAME +
+                        " ON " + ForecastContract.WeatherEntry.TABLE_NAME +
+                        "." + ForecastContract.WeatherEntry.COLUMN_LOC_KEY +
+                        " = " + ForecastContract.LocationEntry.TABLE_NAME +
+                        "." + ForecastContract.LocationEntry._ID
+        );
+    }
+
+    private static final String locationSettingSelection =
+            ForecastContract.LocationEntry.TABLE_NAME + "." + ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING
+            + " = ? "; // question mark will be replaced by query parameter.
+
+    private static final String locationSettingWithStartDateSelection =
+            ForecastContract.LocationEntry.TABLE_NAME + "." + ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING
+                    + " = ? AND " + ForecastContract.WeatherEntry.COLUMN_DATETEXT + " >= ? ";
+
+    private Cursor getWeatherByLocationSetting (Uri uri, String [] projection, String sortOrder) {
+        String locationSetting = ForecastContract.WeatherEntry.getLocationSettingFromUri(uri);
+        String startDate = ForecastContract.WeatherEntry.getStartDateFromUri(uri);
+
+        String[] selectionArgs;
+        String selection;
+
+        if (startDate == null) {
+            selectionArgs = new String[]{locationSetting};
+            selection = locationSettingSelection;
+        } else {
+            selectionArgs = new String[]{locationSetting, startDate};
+            selection = locationSettingWithStartDateSelection;
+        }
+
+        return locationSettingQueryBuilder.query(
+                openHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+
+    }
+
     @Override
     public boolean onCreate() {
         openHelper = new ForecastDbHelper(getContext());
@@ -60,7 +112,7 @@ public class WeatherProvider extends ContentProvider {
 
             // Weather
             case WEATHER_WITH_LOCATION: {
-                retCursor = null;
+                retCursor = getWeatherByLocationSetting(uri, projection, sortOrder);
                 break;
             }
 
