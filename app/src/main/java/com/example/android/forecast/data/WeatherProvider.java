@@ -1,6 +1,7 @@
 package com.example.android.forecast.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -76,11 +77,27 @@ public class WeatherProvider extends ContentProvider {
                 break;
             }
             case LOCATION_ID: {
-                retCursor = null;
+                retCursor = openHelper.getReadableDatabase().query(
+                        ForecastContract.LocationEntry.TABLE_NAME,
+                        projection,
+                        ForecastContract.LocationEntry._ID + " = '" + ContentUris.parseId(uri)+ "'",
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
                 break;
             }
             case LOCATION: {
-                retCursor = null;
+                retCursor = openHelper.getReadableDatabase().query(
+                        ForecastContract.LocationEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
                 break;
             }
 

@@ -106,7 +106,7 @@ public class TestProvider extends AndroidTestCase {
         }
     }
 
-    public void testInsertAndReadDb() {
+    public void testInsertAndReadProvider() {
 
         ForecastDbHelper dbHelper = new ForecastDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -121,16 +121,8 @@ public class TestProvider extends AndroidTestCase {
         assertTrue(locationRowId != -1);
         Log.d(LOG_TAG, "New row id: " + locationRowId);
 
-        // The primary interface to the query results.
-        // Enables traversal over the records in a DB
-        Cursor cursor = db.query(
-                LocationEntry.TABLE_NAME,
-                null,
-                null, // columns for the "where" clause
-                null, // values for the "where" clause
-                null, // column to group by
-                null, // Columns to filter by row groups
-                null  // set order
+        Cursor cursor = mContext.getContentResolver().query(
+                LocationEntry.CONTENT_URI, null, null, null, null
         );
 
         if (cursor.moveToFirst()) { // move cursor to first row
@@ -142,15 +134,8 @@ public class TestProvider extends AndroidTestCase {
             weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
             assertTrue(weatherRowId != -1);
 
-            Cursor weatherCursor = db.query(
-                    WeatherEntry.TABLE_NAME,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
+            Cursor weatherCursor = mContext.getContentResolver().query(WeatherEntry.CONTENT_URI,
+                    null, null, null, null);
 
             if (weatherCursor.moveToFirst()) {
                 validateCursor(weatherValues, weatherCursor);
