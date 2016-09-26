@@ -3,6 +3,7 @@ package com.example.android.forecast.data;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.util.Log;
 
 /**
  * Created by nerd on 22/09/2016.
@@ -10,7 +11,7 @@ import android.provider.BaseColumns;
 
 public class ForecastContract {
     // Content URI made from the CONTENT AUTHORITY
-    public static final String CONTENT_AUTHORITY = "com.example.android.forecast.app";
+    public static final String CONTENT_AUTHORITY = "com.example.android.forecast";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     // Possible paths to be appended to the URI
@@ -64,6 +65,7 @@ public class ForecastContract {
         public static final String COLUMN_DEGREES = "degrees";
 
         public static Uri buildWeatherUri (long id) {
+            Log.v("********* LOG_TAG ", ContentUris.withAppendedId(CONTENT_URI, id).toString() + "");
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
@@ -85,11 +87,16 @@ public class ForecastContract {
         }
 
         public static String getDateFromUri(Uri uri) {
+            Log.v("********* LOG_TAG ", "getDateFromUri: " + uri.getPathSegments().get(2).toString());
+
             return uri.getPathSegments().get(2);
         }
 
         public static String getStartDateFromUri (Uri uri) {
+
             // Search the query string for the first value with this key
+            Log.v("********* LOG_TAG ", "getStartDateFromUri: " + uri.getQueryParameter(COLUMN_DATETEXT).toString());
+
             return uri.getQueryParameter(COLUMN_DATETEXT);
         }
 

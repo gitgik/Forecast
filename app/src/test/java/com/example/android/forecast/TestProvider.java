@@ -1,8 +1,10 @@
 package com.example.android.forecast;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
@@ -134,8 +136,13 @@ public class TestProvider extends AndroidTestCase {
             ContentValues weatherValues = getWeatherContentValues(locationRowId);
 
             long weatherRowId;
-            weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
-            assertTrue(weatherRowId != -1);
+            Uri insertUri = mContext.getContentResolver().insert(
+                    WeatherEntry.CONTENT_URI, null, weatherValues);
+            weatherRowId = ContentUris.parseId(insertUri);
+
+            // If we were not using a content provider
+            // weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
+            // assertTrue(weatherRowId != -1);
 
             Cursor weatherCursor = mContext.getContentResolver().query(WeatherEntry.CONTENT_URI,
                     null, null, null, null);
