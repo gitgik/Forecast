@@ -62,8 +62,14 @@ public class WeatherProvider extends ContentProvider {
             + " = ? "; // question mark will be replaced by query parameter.
 
     private static final String locationSettingWithStartDateSelection =
-            ForecastContract.LocationEntry.TABLE_NAME + "." + ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING
+            ForecastContract.LocationEntry.TABLE_NAME + "."
+                    + ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING
                     + " = ? AND " + ForecastContract.WeatherEntry.COLUMN_DATETEXT + " >= ? ";
+
+    private static final String locationSettingWithDateSelection =
+            ForecastContract.LocationEntry.TABLE_NAME + "."
+                    + ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? AND "
+                    + ForecastContract.WeatherEntry.COLUMN_DATETEXT + " = ? ";
 
     private Cursor getWeatherByLocationSetting (Uri uri, String [] projection, String sortOrder) {
         String locationSetting = ForecastContract.WeatherEntry.getLocationSettingFromUri(uri);
@@ -92,6 +98,17 @@ public class WeatherProvider extends ContentProvider {
 
     }
 
+    private Cursor getWeatherByLocationSettingWithDate (Uri uri, String[] projection, String sortOrder) {
+        String date = ForecastContract.WeatherEntry.getDateFromUri(uri);
+        String locationSetting = ForecastContract.WeatherEntry.getLocationSettingFromUri(uri);
+        return  locationSettingQueryBuilder.query(
+                openHelper.getReadableDatabase(),
+                projection,
+                locationSettingWithDateSelection,
+                new String[]{locationSetting, date},
+                null, null, sortOrder);
+    }
+
     @Override
     public boolean onCreate() {
         openHelper = new ForecastDbHelper(getContext());
@@ -106,7 +123,7 @@ public class WeatherProvider extends ContentProvider {
         switch (uriMatcher.match(uri)) {
             case WEATHER_WITH_LOCATION_AND_DATE:
             {
-                retCursor = null;
+                retCursor = getWeatherByLocationSettingWithDate(uri, projection, sortOrder);
                 break;
             }
 

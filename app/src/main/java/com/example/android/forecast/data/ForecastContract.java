@@ -81,6 +81,10 @@ public class ForecastContract {
 
         public static String getLocationSettingFromUri (Uri uri) {
             // get decoded path segments: location setting
+            return uri.getPathSegments().get(1);
+        }
+
+        public static String getDateFromUri(Uri uri) {
             return uri.getPathSegments().get(2);
         }
 

@@ -57,6 +57,8 @@ public class TestProvider extends AndroidTestCase {
 
     // City name
     public static String TEST_CITY_NAME = "Mountain View";
+    public static String TEST_LOCATION  = "99705";
+    public static String TEST_DATE = "20161209";
 
     ContentValues getLocationContentValues () {
         // Test data to be inserted into tables
@@ -121,6 +123,7 @@ public class TestProvider extends AndroidTestCase {
         assertTrue(locationRowId != -1);
         Log.d(LOG_TAG, "New row id: " + locationRowId);
 
+        // A cursor is a primary interface to the query results
         Cursor cursor = mContext.getContentResolver().query(
                 LocationEntry.CONTENT_URI, null, null, null, null
         );
@@ -142,6 +145,47 @@ public class TestProvider extends AndroidTestCase {
             } else {
                 fail("No weather data returned");
             }
+
+            cursor.close();
+
+            // test weather location
+            weatherCursor = mContext.getContentResolver().query(
+                    WeatherEntry.buildWeatherLocation(TEST_LOCATION),
+                    null, null, null, null);
+
+            if (weatherCursor.moveToFirst()) {
+                validateCursor(weatherValues, weatherCursor);
+            } else {
+                fail("No weather data returned");
+            }
+
+            weatherCursor.close();
+
+            // test weather location with start date
+            weatherCursor = mContext.getContentResolver().query(
+                    WeatherEntry.buildWeatherLocationWithDate(TEST_LOCATION, TEST_DATE),
+                    null, null, null, null);
+
+            if (weatherCursor.moveToFirst()) {
+                validateCursor(weatherValues, weatherCursor);
+            } else {
+                fail("No weather data returned");
+            }
+
+            // test weather location
+            weatherCursor = mContext.getContentResolver().query(
+                    WeatherEntry.buildWeatherLocation(TEST_LOCATION),
+                    null, null, null, null);
+
+            if (weatherCursor.moveToFirst()) {
+                validateCursor(weatherValues, weatherCursor);
+            } else {
+                fail("No weather data returned");
+            }
+
+            weatherCursor.close();
+
+
         } else {
             fail("No values returned");
         }
