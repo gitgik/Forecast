@@ -5,10 +5,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
 import com.example.android.forecast.data.ForecastContract.WeatherEntry;
-import com.example.android.forecast.data.ForecastDbHelper;
 
 import java.util.Map;
 import java.util.Set;
@@ -22,8 +22,22 @@ public class TestProvider extends AndroidTestCase {
 
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
 
-    public void testDeleteDb() throws Throwable {
-     mContext.deleteDatabase(ForecastDbHelper.DATABASE_NAME);
+    public void testDeleteAllRecords() {
+        // delete weather records before location due to relationship constraints in the DB
+        mContext.getContentResolver().delete(WeatherEntry.CONTENT_URI, null, null);
+        //delete location records
+        mContext.getContentResolver().delete(LocationEntry.CONTENT_URI, null, null);
+
+        Cursor cursor = mContext.getContentResolver().query(WeatherEntry.CONTENT_URI,
+                null, null, null, null);
+        assertEquals(cursor.getCount(), 0);
+        cursor.close();
+
+        cursor = mContext.getContentResolver().query(LocationEntry.CONTENT_URI,
+                null, null, null, null);
+        assertEquals(cursor.getCount(), 0);
+
+        cursor.close();
     }
 
     public void testGetType () {
@@ -120,7 +134,7 @@ public class TestProvider extends AndroidTestCase {
         // Verify the row exists.
         assertTrue(locationRowId != -1);
 
-        // Log.d(LOG_TAG, "New row id: " + locationRowId);
+        Log.d(LOG_TAG, "New row id: " + locationRowId);
 
         // A cursor is a primary interface to the query results
         Cursor cursor = mContext.getContentResolver().query(
@@ -193,5 +207,43 @@ public class TestProvider extends AndroidTestCase {
         } else {
             fail("No values returned");
         }
+    }
+
+    public void testUpdateLocation () {
+        // delete all records first
+        testDeleteAllRecords();
+
+        ContentValues values = getLocationContentValues();
+
+        // insert the record to be updated later
+        Uri locationUri = mContext.getContentResolver().insert(
+                LocationEntry.CONTENT_URI,
+                values);
+        long locationRowId = ContentUris.parseId(locationUri);
+        assertTrue(locationRowId != -1);
+        Log.d(LOG_TAG, "New row id: " + locationRowId);
+
+        ContentValues newValues = new ContentValues(values);
+        newValues.put(LocationEntry._ID, locationRowId);
+        // update city from Northpole to Nairobi
+        newValues.put(LocationEntry.COLUMN_CITY_NAME, "Nairobi");
+
+        int count = mContext.getContentResolver().update(
+                LocationEntry.CONTENT_URI,
+                newValues,
+                Long.toString(locationRowId),
+                new String [] {Long.toString(locationRowId)});
+        assertEquals(count, 1);
+
+        Cursor cursor = mContext.getContentResolver().query(
+                LocationEntry.buildLocationUri(locationRowId),
+                null, null, null, null
+        );
+
+        if (cursor.moveToFirst()) {
+            validateCursor(newValues, cursor);
+        }
+
+        cursor.close();
     }
 }
