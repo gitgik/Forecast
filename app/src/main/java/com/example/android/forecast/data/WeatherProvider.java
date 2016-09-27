@@ -251,12 +251,74 @@ public class WeatherProvider extends ContentProvider {
     }
 
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        final SQLiteDatabase db = openHelper.getWritableDatabase();
+        final int match = uriMatcher.match(uri);
+        int rowSelected;
+
+        // only match the base uris
+        switch (match) {
+            case WEATHER: {
+                rowSelected = db.update(
+                        ForecastContract.WeatherEntry.TABLE_NAME,
+                        values,
+                        selection,
+                        selectionArgs
+                );
+                break;
+            }
+            case LOCATION: {
+                rowSelected = db.update(
+                        ForecastContract.LocationEntry.TABLE_NAME,
+                        values,
+                        selection,
+                        selectionArgs
+                );
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("Unknown URI: " + uri);
+        }
+        // Since null selection deletes all rows
+        if (null == selection || 0 != rowSelected) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowSelected;
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        return 0;
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        final SQLiteDatabase db = openHelper.getWritableDatabase();
+        final int match = uriMatcher.match(uri);
+        int rowSelected;
+
+        // only match the base uris
+        switch (match) {
+            case WEATHER: {
+                rowSelected = db.delete(
+                        ForecastContract.WeatherEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs
+                );
+                break;
+            }
+            case LOCATION: {
+                rowSelected = db.delete(
+                        ForecastContract.LocationEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs
+                );
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("Unknown URI: " + uri);
+        }
+        // Since null selection deletes all rows
+        if (null == selection || 0 != rowSelected) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowSelected;
     }
+
+
 }

@@ -3,10 +3,8 @@ package com.example.android.forecast;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.test.AndroidTestCase;
-import android.util.Log;
 
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
 import com.example.android.forecast.data.ForecastContract.WeatherEntry;
@@ -112,18 +110,17 @@ public class TestProvider extends AndroidTestCase {
 
     public void testInsertAndReadProvider() {
 
-        ForecastDbHelper dbHelper = new ForecastDbHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
         ContentValues values = getLocationContentValues();
 
         // Insert data into the database
         long locationRowId;
-        locationRowId = db.insert(LocationEntry.TABLE_NAME, null, values);
+        Uri locationUri = mContext.getContentResolver().insert(LocationEntry.CONTENT_URI, values);
 
+        locationRowId = ContentUris.parseId(locationUri);
         // Verify the row exists.
         assertTrue(locationRowId != -1);
-        Log.d(LOG_TAG, "New row id: " + locationRowId);
+
+        // Log.d(LOG_TAG, "New row id: " + locationRowId);
 
         // A cursor is a primary interface to the query results
         Cursor cursor = mContext.getContentResolver().query(
@@ -137,12 +134,12 @@ public class TestProvider extends AndroidTestCase {
 
             long weatherRowId;
             Uri insertUri = mContext.getContentResolver().insert(
-                    WeatherEntry.CONTENT_URI, null, weatherValues);
+                    WeatherEntry.CONTENT_URI, weatherValues);
             weatherRowId = ContentUris.parseId(insertUri);
 
             // If we were not using a content provider
             // weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
-            // assertTrue(weatherRowId != -1);
+            assertTrue(weatherRowId != -1);
 
             Cursor weatherCursor = mContext.getContentResolver().query(WeatherEntry.CONTENT_URI,
                     null, null, null, null);
@@ -153,7 +150,7 @@ public class TestProvider extends AndroidTestCase {
                 fail("No weather data returned");
             }
 
-            cursor.close();
+            weatherCursor.close();
 
             // test weather location
             weatherCursor = mContext.getContentResolver().query(
