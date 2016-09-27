@@ -320,5 +320,37 @@ public class WeatherProvider extends ContentProvider {
         return rowSelected;
     }
 
+    /**
+     * Puts a bunch of inserts into a single transaction
+     * @param uri
+     * @param values
+     * @return
+     */
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        final SQLiteDatabase db = openHelper.getWritableDatabase();
+        // buildUriMatcher().match(uri);
+        final int match = uriMatcher.match(uri);
 
+        switch (match) {
+            case WEATHER:
+                db.beginTransaction();
+                int returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(ForecastContract.WeatherEntry.TABLE_NAME, null, value);
+                        if (-1 != _id)
+                            returnCount++;
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+
+            default:
+                return super.bulkInsert(uri, values);
+        }
+    }
 }
