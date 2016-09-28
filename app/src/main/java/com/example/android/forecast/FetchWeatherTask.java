@@ -210,7 +210,10 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
                 weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, weatherId);
 
                 contentValVector.add(weatherValues);
+
             }
+            // insert the weather data into the database
+            insertWeatherIntoDatabase(contentValVector);
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
@@ -262,6 +265,16 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
                     locationValues
             );
             return ContentUris.parseId(locationInsertUri);
+        }
+    }
+
+    private void insertWeatherIntoDatabase (Vector<ContentValues> vector) {
+        if (vector.size() > 0) {
+            ContentValues[] contentValuesArray = new ContentValues[vector.size()];
+            vector.toArray(contentValuesArray);
+
+            int rowsInserted = mContext.getContentResolver().bulkInsert(
+                    WeatherEntry.CONTENT_URI, contentValuesArray);
         }
     }
 }
