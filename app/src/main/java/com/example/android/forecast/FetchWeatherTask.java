@@ -1,9 +1,14 @@
 package com.example.android.forecast;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.example.android.forecast.data.ForecastContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +35,13 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
     }
     @Override
     protected Void doInBackground(String... params) {
+
+        if (params.length == 0) {
+            // Nothing to look at here
+            return null;
+        }
+        String locationQuery = params[0];
+
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
@@ -47,7 +59,7 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
             final String API_KEY = "APPID";
 
             Uri buildUri = Uri.parse(FORECAST_URL).buildUpon()
-                    .appendQueryParameter(QUERY_PARAM, params[0])
+                    .appendQueryParameter(QUERY_PARAM, locationQuery)
                     .appendQueryParameter(FORMAT, "json")
                     .appendQueryParameter(UNITS, "metric")
                     .appendQueryParameter(DAYS, "14")
@@ -138,9 +150,57 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
             double cityLatitude = cityCoord.getDouble(LATITUDE);
             double cityLongitude = cityCoord.getDouble(LONGITUDE);
 
+            long locationId = addLocation(locationQuery, cityName, cityLatitude, cityLongitude);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Helper method to handle the insertion of a new location
+     *  in the weather database
+     *
+     * @param locationSetting the location string to request the updates from the service
+     * @param cityName the city name eg. Nairobi
+     * @param lat the latitude of the city
+     * @param lon the longitude of the city
+     * @return
+     */
+    private long addLocation (String locationSetting, String cityName, double lat, double lon) {
+        Log.v(LOG_TAG, "Inserting " + cityName + ", with coord: "
+                + lat + ", " + lon);
+        //Check if the location exists in the db
+        Cursor cursor = mContext.getContentResolver().query(
+                ForecastContract.LocationEntry.CONTENT_URI,
+                new String[]{ForecastContract.LocationEntry._ID},
+                ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
+                new String[]{locationSetting}, null
+        );
+
+        if (cursor.moveToFirst()) {
+            Log.v(LOG_TAG, "Found city in the db");
+            int locationIdIndex = cursor.getColumnIndex(ForecastContract.LocationEntry._ID);
+            return cursor.getLong(locationIdIndex);
+        } else {
+            Log.v(LOG_TAG, "Didn't find it in the db. Inserting now...");
+
+            ContentValues locationValues = new ContentValues();
+            locationValues.put(
+                    ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+            locationValues.put(
+                    ForecastContract.LocationEntry.COLUMN_CITY_NAME, cityName);
+            locationValues.put(
+                    ForecastContract.LocationEntry.COLUMN_LATITUDE, lat);
+            locationValues.put(
+                    ForecastContract.LocationEntry.COLUMN_LONGITUDE, lon);
+
+            Uri locationInsertUri = mContext.getContentResolver().insert(
+                    ForecastContract.LocationEntry.CONTENT_URI,
+                    locationValues
+            );
+            return ContentUris.parseId(locationInsertUri);
+        }
     }
 }
