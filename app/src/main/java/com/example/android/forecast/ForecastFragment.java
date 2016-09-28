@@ -1,13 +1,8 @@
 package com.example.android.forecast;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,19 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -54,10 +37,8 @@ public class ForecastFragment extends Fragment {
 
 
     private void updateWeather () {
-        FetchWeatherTask fetch = new FetchWeatherTask();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
-        fetch.execute(location);
+        FetchWeatherTask fetch = new FetchWeatherTask(getActivity());
+
     }
 
     @Override
@@ -107,182 +88,5 @@ public class ForecastFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.menu_main, menu);
-    }
-
-    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-
-        private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-
-        @Override
-        protected void onPostExecute(String[] results) {
-            if (results != null) {
-                forecastAdapter.clear();
-                for (String dayForecastString : results) {
-                    forecastAdapter.add(dayForecastString);
-                }
-            }
-        }
-
-        /*
-         * Converts Unix timestamp to readable date
-        */
-        private String getReadableDataString (long time) {
-            Date date = new Date(time * 1000);
-            SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
-            return format.format(date).toString();
-        }
-
-        /*
-         * Format weather's high and low temperature
-         */
-        private String formatHighLows (double high, double low) {
-            // Data is felt in celsius by default
-            // converting to Fahrenheit is done here
-
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(
-                    getActivity());
-            String temperatureUnitType = sharedPrefs.getString(
-                    getString(R.string.pref_units_key),
-                    getString(R.string.pref_units_imperial)
-            );
-
-            if (temperatureUnitType.equals(getString(R.string.pref_units_imperial))) {
-                high = (high * 1.8) + 32;
-                low = (low * 1.8) + 32;
-            } else if (!temperatureUnitType.equals(
-                    getString(R.string.pref_units_imperial))) {
-                Log.d(LOG_TAG, "Unit type not found: " + temperatureUnitType);
-            }
-
-            long roundedHigh = Math.round(high);
-            long roundedLow = Math.round(low);
-
-            String result = roundedHigh + "/" + roundedLow;
-            return result;
-        }
-
-        /*
-         * Format json string to relevant data
-         */
-        private String [] getWeatherFromJson(String jsonString, int days) throws JSONException {
-            // JSON objects that need to be extracted
-            final String LIST = "list";
-            final String WEATHER = "weather";
-            final String TEMPERATURE = "temp";
-            final String MAX = "max";
-            final String MIN = "min";
-            final String DATETIME = "dt";
-            final String DESCRIPTION = "main";
-
-            JSONObject forecastJson = new JSONObject(jsonString);
-            JSONArray weatherArray = forecastJson.getJSONArray(LIST);
-
-            String[] resultStrings = new String[days];
-            for (int i = 0; i < weatherArray.length(); i++) {
-                String day, description, highLow;
-
-                // Get json object data representing the day
-                JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-                long dateTime = dayForecast.getLong(DATETIME);
-                day = getReadableDataString(dateTime);
-
-                // description is in child array "weather"
-                JSONObject weatherObject = dayForecast.getJSONArray(WEATHER).getJSONObject(0);
-                description = weatherObject.getString(DESCRIPTION);
-
-                // Temperature are in object called "temp"
-                JSONObject temperatureObject = dayForecast.getJSONObject(TEMPERATURE);
-                double highTemperature = temperatureObject.getDouble(MAX);
-                double lowTemperature = temperatureObject.getDouble(MIN);
-
-                highLow = formatHighLows(highTemperature, lowTemperature);
-
-                resultStrings[i] = day + " –– " + description + " –– " + highLow;
-            }
-
-            for (String s : resultStrings) {
-                Log.v(LOG_TAG, "FORECAST ENTRY: " + s);
-            }
-
-            return resultStrings;
-        }
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will store the raw JSON response as a string.
-            String forecastJsonString = null;
-            String apiKey = "de07b800a0f30d675a6ceb7d9b30ce11";
-
-            try {
-                // Construct URL for the OpenWeatherMap API
-                final String QUERY_PARAM = "q";
-                final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
-                final String FORMAT = "mode";
-                final String UNITS = "units";
-                final String DAYS = "cnt";
-                final String API_KEY = "APPID";
-
-                Uri buildUri = Uri.parse(FORECAST_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(FORMAT, "json")
-                        .appendQueryParameter(UNITS, "metric")
-                        .appendQueryParameter(DAYS, "7")
-                        .appendQueryParameter(API_KEY, apiKey).build();
-
-                URL url = new URL(buildUri.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    // add new line for easier debugging
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    return  null;
-                }
-                forecastJsonString = buffer.toString();
-                // log the json string
-                Log.v(LOG_TAG, "JSON: " + forecastJsonString);
-
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "NETWORK ERROR: ", e);
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try
-                    {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "CLOSING STREAM", e);
-                    }
-                }
-            }
-
-            try {
-                return getWeatherFromJson(forecastJsonString, 7);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
     }
 }
