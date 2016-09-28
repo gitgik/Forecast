@@ -5,6 +5,9 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by nerd on 22/09/2016.
  */
@@ -135,6 +138,13 @@ public class ForecastContract {
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";
 
+    }
+
+    public static final String DATE_FORMAT = "yyyyMMdd";
+    public static String getDbDateString(Date date) {
+        // Change returned unix timestamp into a readable date format
+        SimpleDateFormat simpleDate = new SimpleDateFormat(DATE_FORMAT);
+        return simpleDate.format(date);
     }
 }
 
