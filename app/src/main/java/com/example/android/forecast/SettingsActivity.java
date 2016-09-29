@@ -11,6 +11,8 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
+import com.example.android.forecast.data.ForecastContract;
+
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
  * handset devices, settings are presented as a single list. On tablets,
@@ -27,10 +29,24 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
      */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+
+        boolean mBindingPreferences = false;
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
+
+            if (!mBindingPreferences) {
+                if (preference.getKey().equals(getString(R.string.pref_location_key))) {
+                    FetchWeatherTask weatherTask = new FetchWeatherTask(getApplicationContext());
+                    String location = value.toString();
+                    weatherTask.execute(location);
+                } else {
+                    // notify code that weather may be affected
+                    getContentResolver().notifyChange(
+                            ForecastContract.WeatherEntry.CONTENT_URI, null);
+                }
+            }
 
             // For all other preferences, set the summary to the value's
             // simple string representation.
@@ -57,7 +73,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      *
      * @see #sBindPreferenceSummaryToValueListener
      */
-    private static void bindPreferenceSummaryToValue(Preference preference) {
+    private void bindPreferenceSummaryToValue(Preference preference) {
+
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 

@@ -28,6 +28,8 @@ public class ForecastDbHelper extends SQLiteOpenHelper {
                 WeatherEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 WeatherEntry.COLUMN_LOC_KEY + " INTEGER NOT NULL, " +
                 WeatherEntry.COLUMN_DATETEXT + " TEXT NOT NULL, " +
+                WeatherEntry.COLUMN_SHORT_DESC + " TEXT NOT NULL, " +
+                WeatherEntry.COLUMN_WEATHER_ID + " INTEGER NOT NULL, " +
 
                 WeatherEntry.COLUMN_MIN_TEMP + " REAL NOT NULL, " +
                 WeatherEntry.COLUMN_MAX_TEMP + " REAL NOT NULL, " +
@@ -67,5 +69,10 @@ public class ForecastDbHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + LocationEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + WeatherEntry.TABLE_NAME);
         onCreate(db);
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
     }
 }

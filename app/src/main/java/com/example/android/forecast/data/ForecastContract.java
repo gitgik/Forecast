@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -90,16 +91,10 @@ public class ForecastContract {
         }
 
         public static String getDateFromUri(Uri uri) {
-            Log.v("********* LOG_TAG ", "getDateFromUri: " + uri.getPathSegments().get(2).toString());
-
             return uri.getPathSegments().get(2);
         }
 
         public static String getStartDateFromUri (Uri uri) {
-
-            // Search the query string for the first value with this key
-            Log.v("********* LOG_TAG ", "getStartDateFromUri: " + uri.getQueryParameter(COLUMN_DATETEXT).toString());
-
             return uri.getQueryParameter(COLUMN_DATETEXT);
         }
 
@@ -145,6 +140,21 @@ public class ForecastContract {
         // Change returned unix timestamp into a readable date format
         SimpleDateFormat simpleDate = new SimpleDateFormat(DATE_FORMAT);
         return simpleDate.format(date);
+    }
+
+    /**
+     * Convert date text to a long unix time representation
+     * @param dateString the input date string
+     * @return the Date Object
+     */
+    public static Date getDateFromDb(String dateString) {
+        SimpleDateFormat dbDateFormat = new SimpleDateFormat(DATE_FORMAT);
+        try {
+            return dbDateFormat.parse(dateString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
 

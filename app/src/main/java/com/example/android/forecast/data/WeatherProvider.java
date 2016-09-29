@@ -20,10 +20,12 @@ public class WeatherProvider extends ContentProvider {
     private static final int WEATHER = 100;
     private static final int WEATHER_WITH_LOCATION = 101;
     private static final int WEATHER_WITH_LOCATION_AND_DATE = 102;
+
     private static final int LOCATION = 300;
     private static final int LOCATION_ID = 301;
 
     private static final UriMatcher uriMatcher = buildUriMatcher();
+
     private static UriMatcher buildUriMatcher () {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = ForecastContract.CONTENT_AUTHORITY;
@@ -100,13 +102,13 @@ public class WeatherProvider extends ContentProvider {
     }
 
     private Cursor getWeatherByLocationSettingWithDate (Uri uri, String[] projection, String sortOrder) {
-        String date = ForecastContract.WeatherEntry.getDateFromUri(uri);
+        String day = ForecastContract.WeatherEntry.getDateFromUri(uri);
         String locationSetting = ForecastContract.WeatherEntry.getLocationSettingFromUri(uri);
         return  locationSettingQueryBuilder.query(
                 openHelper.getReadableDatabase(),
                 projection,
                 locationSettingWithDateSelection,
-                new String[]{locationSetting, date},
+                new String[]{locationSetting, day},
                 null, null, sortOrder);
     }
 
@@ -121,6 +123,7 @@ public class WeatherProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         // Define a switch that determines the kind of request to be made given a URI
         Cursor retCursor;
+
         switch (uriMatcher.match(uri)) {
             case WEATHER_WITH_LOCATION_AND_DATE:
             {
