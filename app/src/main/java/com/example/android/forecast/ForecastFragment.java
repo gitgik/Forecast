@@ -86,6 +86,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     @Override
     public void onResume() {
+        // Check if our location has changed to update the weather
         super.onResume();
         if (mLocation != null && !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             // restart our loader
@@ -151,19 +152,11 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
                 SimpleCursorAdapter adapter = (SimpleCursorAdapter) adapterView.getAdapter();
                 Cursor cursor = adapter.getCursor();
-
                 if (null != cursor && cursor.moveToPosition(position)) {
-                    boolean isMetric = Utility.isMetric(getActivity());
-                    String forecast = String.format("%s-%s-%s/%s",
-                            Utility.formatDate(cursor.getString(COL_WEATHER_DATE)),
-                            cursor.getString(COL_WEATHER_DESC),
-                            Utility.formatTemperature(cursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric),
-                            Utility.formatTemperature(cursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric));
                     Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .putExtra(Intent.EXTRA_TEXT, forecast);
+                            .putExtra(DetailActivityFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
                     startActivity(intent);
                 }
 
