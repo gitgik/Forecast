@@ -9,7 +9,7 @@
     android:paddingTop="16dp"
     android:paddingBottom="16dp"
     android:paddingRight="16dp"
-    android:background="?attr/colorAccent"
+    android:background="@android:color/background_light"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
     <LinearLayout
@@ -27,7 +27,7 @@
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
             android:text="Today"
-            android:textColor="@android:color/white"/>
+            />
 
         <TextView
             android:id="@+id/list_item_high_textview"
@@ -36,7 +36,7 @@
             android:textSize="72sp"
             android:fontFamily="sans-serif-light"
             android:text="22"
-            android:textColor="@android:color/white"/>
+            />
 
         <TextView
             android:id="@+id/list_item_low_textview"
@@ -45,7 +45,7 @@
             android:textSize="36sp"
             android:fontFamily="sans-serif-light"
             android:text="12"
-            android:textColor="@android:color/white"/>
+            />
 
     </LinearLayout>
 
@@ -68,7 +68,7 @@
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
             android:text="Clear"
-            android:textColor="@android:color/white"/>
+            />
 
     </LinearLayout>
 </LinearLayout>
