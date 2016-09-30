@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
@@ -57,7 +55,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public static final int COL_LOCATION_SETTING = 5;
 
 
-    private SimpleCursorAdapter forecastAdapter;
+    private ForecastAdapter forecastAdapter;
 
 
     @Override
@@ -99,60 +97,21 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // The simple cursor adapter takes raw data and populates the ListView it is attached to.
-        forecastAdapter = new SimpleCursorAdapter(
-                getActivity(), // the current context
-                R.layout.list_item_forecast, // Id of list-item layout (list_item_forecast.xml)
-                null,
-                // column names
-                new String[]{WeatherEntry.COLUMN_DATETEXT,
-                        WeatherEntry.COLUMN_SHORT_DESC,
-                        WeatherEntry.COLUMN_MAX_TEMP,
-                        WeatherEntry.COLUMN_MIN_TEMP
-                },
-                new int[]{R.id.list_item_date_textview,
-                        R.id.list_item_forecast_textview,
-                        R.id.list_item_high_textview,
-                        R.id.list_item_low_textview
-                },
-                0
-        );
-
-        forecastAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-            @Override
-            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                boolean isMetric = Utility.isMetric(getActivity());
-                switch (columnIndex) {
-                    case COL_WEATHER_MAX_TEMP:
-                    case COL_WEATHER_MIN_TEMP: {
-                        ((TextView) view).setText(Utility.formatTemperature(cursor.getDouble(columnIndex), isMetric));
-                        return true;
-                    }
-                    case COL_WEATHER_DATE: {
-                        String dateString = cursor.getString(columnIndex);
-                        TextView dateView = (TextView) view;
-                        dateView.setText(Utility.formatDate(dateString));
-                        return true;
-                    }
-                }
-                return  false;
-            }
-        });
-
-
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
-
         // Get a reference to list view and attach the adapter to it.
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+
+        // Create our custom adapter.
+        // Unlike simple cursor adapter: No need to define db columns it should be mapping
+        // The simple cursor adapter takes raw data and populates the ListView it is attached to.
+        forecastAdapter = new ForecastAdapter(getActivity(), null, 0);
         listView.setAdapter(forecastAdapter);
-
-
         // Listen for clicks on the item
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                SimpleCursorAdapter adapter = (SimpleCursorAdapter) adapterView.getAdapter();
+                ForecastAdapter adapter = (ForecastAdapter) adapterView.getAdapter();
                 Cursor cursor = adapter.getCursor();
                 if (null != cursor && cursor.moveToPosition(position)) {
                     Intent intent = new Intent(getActivity(), DetailActivity.class)

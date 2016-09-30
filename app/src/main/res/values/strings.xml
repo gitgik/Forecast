@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Forecast</string>
     <string name="action_map">Map Location</string>
     <string name="action_share">Share</string>
@@ -34,5 +34,17 @@
         <item>Metric</item>
         <item>Imperial</item>
     </string-array>
+
+    <!-- Date label when displaying today's weather forecast [CHAR LIMIT=20] -->
+    <string name="today">Today</string>
+
+    <!-- Date format for displaying day of week and date (i.e. Mon Jun 1) [CHAR LIMIT=20] -->
+    <string name="format_full_friendly_date">
+        <!-- To mark text that should not be translated -->
+        <xliff:g id="day_of_week">%1$s</xliff:g>, <xliff:g id="date">%2$s</xliff:g>
+    </string>
+
+    <!-- Date label when displaying tomorrow's weather forecast [CHAR LIMIT=20] -->
+    <string name="tomorrow">Tomorrow</string>
 
 </resources>
