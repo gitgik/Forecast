@@ -192,11 +192,11 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                 data.getString(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DATETEXT))
         );
         boolean isMetric = Utility.isMetric(getActivity());
-        String high = Utility.formatTemperature(
+        String high = Utility.formatTemperature(getContext(),
                 data.getDouble(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP)), isMetric
         );
 
-        String low = Utility.formatTemperature(
+        String low = Utility.formatTemperature(getContext(),
                 data.getDouble(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP)), isMetric
         );
 
