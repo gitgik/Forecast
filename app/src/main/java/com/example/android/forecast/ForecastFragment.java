@@ -29,6 +29,10 @@ import java.util.Date;
 public class ForecastFragment extends Fragment  implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private String mLocation;
+    private int mPosition;
+    private static final String LOCATION_KEY = "location";
+    private static final String POSITION_KEY = "position";
+
     // The loader ID for this Loader
     private static final int FORECAST_LOADER = 0;
     // Specify the columns to show
@@ -41,6 +45,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
             WeatherEntry.COLUMN_SHORT_DESC,
             WeatherEntry.COLUMN_MAX_TEMP,
             WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherEntry.COLUMN_WEATHER_ID,
             LocationEntry.COLUMN_LOCATION_SETTING
     };
 
@@ -52,7 +57,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public static final int COL_WEATHER_MAX_TEMP = 3;
     public static final int COL_WEATHER_MIN_TEMP = 4;
     public static final int COL_WEATHER_CONDITION_ID = 5;
-    public static final int COL_LOCATION_SETTING = 5;
+    public static final int COL_LOCATION_SETTING = 6;
 
 
     private ForecastAdapter forecastAdapter;
@@ -97,6 +102,14 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        if (savedInstanceState != null && savedInstanceState.containsKey(LOCATION_KEY)) {
+            mLocation = savedInstanceState.getString(LOCATION_KEY);
+        }
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(POSITION_KEY)) {
+            mPosition = savedInstanceState.getInt(POSITION_KEY);
+        }
+
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         // Get a reference to list view and attach the adapter to it.
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
@@ -118,6 +131,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
                             .putExtra(DetailActivityFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
                     startActivity(intent);
                 }
+                mPosition = position;
 
             }
         });
@@ -163,6 +177,8 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
         if (!mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
+        } else if (mPosition != ListView.INVALID_POSITION) {
+
         }
     }
 

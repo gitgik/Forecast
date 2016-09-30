@@ -17,7 +17,7 @@ public class ForecastAdapter extends CursorAdapter {
     public final String TAG = ForecastAdapter.class.getSimpleName();
 
     private final int VIEW_TYPE_TODAY = 0;
-    private final int VIEW_TYPE_FUTURE_DAY = 0;
+    private final int VIEW_TYPE_FUTURE_DAY = 1;
     private boolean useTodayLayout;
 
     public ForecastAdapter (Context context, Cursor c, int flags) {
@@ -65,11 +65,23 @@ public class ForecastAdapter extends CursorAdapter {
         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
         // Read weather icon ID from cursor
-        int weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_ID);
+        int weatherId;
+        // Use image that corresponds to the weather code from the API.
+        int viewType= getItemViewType(cursor.getPosition());
+        switch (viewType) {
+            case VIEW_TYPE_TODAY:
+                // Get weather icon
+                weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
+                viewHolder.iconView.setImageResource(
+                        Utility.getArtResourceForWeatherCondition(weatherId));
+                break;
 
-        // Use placeholder image
-        ImageView iconView = (ImageView) view.findViewById(R.id.list_item_icon);
-        iconView.setImageResource(R.drawable.ic_info_black_24dp);
+            case VIEW_TYPE_FUTURE_DAY:
+                weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
+                viewHolder.iconView.setImageResource(
+                        Utility.getIconResourceForWeatherCondition(weatherId));
+                break;
+        }
 
         // Read date from cursor
         String dateString = cursor.getString(ForecastFragment.COL_WEATHER_DATE);
@@ -86,7 +98,6 @@ public class ForecastAdapter extends CursorAdapter {
 
         float high = cursor.getFloat(ForecastFragment.COL_WEATHER_MAX_TEMP);
         viewHolder.highView.setText(Utility.formatTemperature(context, high, isMetric));
-
 
         float low = cursor.getFloat(ForecastFragment.COL_WEATHER_MIN_TEMP);
         viewHolder.lowView.setText(Utility.formatTemperature(context, low, isMetric));

@@ -26,7 +26,8 @@
             android:layout_height="wrap_content"
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
-            android:text="Today"/>
+            android:text="Today"
+            android:textColor="@android:color/white"/>
 
         <TextView
             android:id="@+id/list_item_high_textview"
@@ -34,7 +35,8 @@
             android:layout_height="wrap_content"
             android:textSize="72sp"
             android:fontFamily="sans-serif-light"
-            android:text="22"/>
+            android:text="22"
+            android:textColor="@android:color/white"/>
 
         <TextView
             android:id="@+id/list_item_low_textview"
@@ -42,7 +44,8 @@
             android:layout_height="wrap_content"
             android:textSize="36sp"
             android:fontFamily="sans-serif-light"
-            android:text="12"/>
+            android:text="12"
+            android:textColor="@android:color/white"/>
 
     </LinearLayout>
 
@@ -64,7 +67,8 @@
             android:layout_height="wrap_content"
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
-            android:text="Clear"/>
+            android:text="Clear"
+            android:textColor="@android:color/white"/>
 
     </LinearLayout>
 </LinearLayout>
