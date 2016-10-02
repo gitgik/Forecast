@@ -17,6 +17,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.forecast.data.ForecastContract;
@@ -50,9 +51,11 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
             ForecastContract.WeatherEntry.COLUMN_WIND_SPEED,
             ForecastContract.WeatherEntry.COLUMN_DEGREES,
             ForecastContract.WeatherEntry.COLUMN_WEATHER_ID,
+            // Return the location data from the JOIN
             ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING
     };
 
+    public ImageView iconView;
     public TextView dateView;
     public TextView descriptionView;
     public TextView highTemperatureView;
@@ -87,10 +90,16 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        iconView = (ImageView) rootView.findViewById(R.id.detail_icon);
         dateView = (TextView) rootView.findViewById(R.id.detail_date_textview);
         descriptionView = (TextView) rootView.findViewById(R.id.detail_forecast_textview);
         highTemperatureView = (TextView) rootView.findViewById(R.id.detail_high_textview);
         lowTemperatureView = (TextView) rootView.findViewById(R.id.detail_low_textview);
+        humidityView = (TextView) rootView.findViewById(R.id.detail_humidity_textview);
+        windView = (TextView) rootView.findViewById(R.id.detail_wind_textview);
+        pressureView = (TextView) rootView.findViewById(R.id.detail_pressure_textview);
+
+
         return rootView;
     }
 
@@ -182,16 +191,25 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
         if (!data.moveToFirst()) {
             return;
         }
-        String description =
-                data.getString(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC));
+
+        String description = data.getString(
+                data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC));
+        descriptionView.setText(description);
+
         int weatherId = data.getInt(data.getColumnIndex(
                 ForecastContract.WeatherEntry.COLUMN_WEATHER_ID
         ));
 
-        String dateString = Utility.formatDate(
-                data.getString(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DATETEXT))
-        );
-        boolean isMetric = Utility.isMetric(getActivity());
+        iconView.setImageResource(R.drawable.ic_launcher);
+
+        String date = data.getString(data.getColumnIndex(
+                ForecastContract.WeatherEntry.COLUMN_DATETEXT
+        ));
+        String friendlyDateText = Utility.getDayName(getActivity(), date);
+        String dateText = Utility.getFormattedMonthDay(getActivity(), date);
+        dateView.setText(friendlyDateText);
+
+        boolean isMetric =  Utility.isMetric(getActivity());
         String high = Utility.formatTemperature(getContext(),
                 data.getDouble(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP)), isMetric
         );
@@ -200,20 +218,23 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                 data.getDouble(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP)), isMetric
         );
 
+        highTemperatureView.setText(high);
+        lowTemperatureView.setText(low);
+
+
         // Read humidity from the cursor and update view
         float humidity = data.getFloat(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_HUMIDITY));
+        humidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
 
         // Read wind speed and direction
         float windSpeedString = data.getFloat(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_WIND_SPEED));
         float windDirString = data.getFloat(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DEGREES));
+        windView.setText(Utility.getFormattedWind(getActivity(), windSpeedString, windDirString));
 
         // Read the pressure from the cursor
-        float pressure = data.getFloat(data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_PRESSURE));
-
-        dateView.setText(dateString);
-        highTemperatureView.setText(high + "\u00B0");
-        lowTemperatureView.setText(low + "\u00B0");
-        descriptionView.setText(description);
+        float pressure = data.getFloat(
+                data.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_PRESSURE));
+        pressureView.setText(getActivity().getString(R.string.format_pressure, pressure));
 
         forecastString = String.format("%s - %s - %s/%s",
                 dateView.getText(),
