@@ -242,7 +242,6 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                 highTemperatureView.getText(),
                 lowTemperatureView.getText());
 
-
     }
 
 
