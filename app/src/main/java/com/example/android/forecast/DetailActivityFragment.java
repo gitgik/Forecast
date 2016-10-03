@@ -87,8 +87,10 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
         if (null != savedInstanceState) {
             mLocation = savedInstanceState.getString(LOCATION_KEY);
         }
-        Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra(DetailActivity.DATE_KEY)) {
+        // Remove any reliance on the incoming intent and use the arguments bundle instead
+        Bundle arguments = getArguments();
+        // initialize the loader only if the arguments is not null
+        if (arguments != null && arguments.containsKey(DetailActivity.DATE_KEY)) {
             getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         }
     }
@@ -160,10 +162,10 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
     @Override
     public void onResume() {
         super.onResume();
-        Intent intent = getActivity().getIntent();
-        if (
-                null != mLocation &&
-                intent.hasExtra(DetailActivity.DATE_KEY) &&
+        // Intent intent = getActivity().getIntent();
+        Bundle arguments = getArguments();
+        if (null != mLocation && arguments != null &&
+                arguments.containsKey(DetailActivity.DATE_KEY) &&
                 !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
@@ -186,14 +188,18 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String forecastDate = getActivity().getIntent().getStringExtra(DATE_KEY);
+        // String forecastDate = getActivity().getIntent().getStringExtra(DATE_KEY);
+
+        String dateString = getArguments().getString(DetailActivity.DATE_KEY);
 
         mLocation = Utility.getPreferredLocation(getActivity());
         // Sort order: Ascending by date
         String sortOrder = ForecastContract.WeatherEntry.COLUMN_DATETEXT + " ASC";
 
-        Uri weatherUri = ForecastContract.WeatherEntry.buildWeatherLocationWithDate(mLocation, forecastDate);
+        Uri weatherUri = ForecastContract.WeatherEntry.buildWeatherLocationWithDate(mLocation, dateString);
 
+        // Create and return a cursor loader that will take care
+        // of creating a cursor for the data being displayed.
         return new CursorLoader(
                 getActivity(),
                 weatherUri,
