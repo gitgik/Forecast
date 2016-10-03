@@ -30,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
 
             // In two-pane mode, show the detail view in this activity by
             // adding a detail fragment using a fragment transaction
+
+            // If bundle exists, let the system handle the restoration itself
+            // thus we have to check if the bundle is null
             if (savedInstanceState == null) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.weather_detail_container, new DetailActivityFragment())

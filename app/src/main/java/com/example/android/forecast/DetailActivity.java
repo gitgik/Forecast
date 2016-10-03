@@ -13,7 +13,6 @@ public class DetailActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         if (savedInstanceState == null) {
             // In one pane mode, add detail fragment to this container
             getSupportFragmentManager().beginTransaction().add(
