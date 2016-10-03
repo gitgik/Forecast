@@ -224,7 +224,7 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                 ForecastContract.WeatherEntry.COLUMN_WEATHER_ID
         ));
 
-        iconView.setImageResource(R.drawable.ic_launcher);
+        iconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
 
         String date = data.getString(data.getColumnIndex(
                 ForecastContract.WeatherEntry.COLUMN_DATETEXT
