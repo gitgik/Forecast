@@ -6,6 +6,8 @@ import android.support.v7.widget.Toolbar;
 
 public class DetailActivity extends AppCompatActivity {
 
+    public static final String DATE_KEY = "date";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -14,10 +16,13 @@ public class DetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         if (savedInstanceState == null) {
-            // In one pane mode, add detail fragment to this container
+            // In one pane mode, create the detail fragment
+            // add it to the activity using a fragment transaction
+            String date = getIntent().getStringExtra(DATE_KEY);
+
             getSupportFragmentManager().beginTransaction().add(
                     R.id.weather_detail_container,
-                    new DetailActivityFragment()).commit();
+                    DetailActivityFragment.newInstance(date)).commit();
         }
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

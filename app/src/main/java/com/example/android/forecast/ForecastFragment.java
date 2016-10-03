@@ -1,6 +1,5 @@
 package com.example.android.forecast;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -62,6 +61,21 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     private ForecastAdapter forecastAdapter;
 
+    /**
+     * A callback interface that all activities containing this fragment
+     * must implement. This mechanism allows activities to be notified
+     * of item selection
+     */
+    public interface Callback {
+        /**
+         * Callback for when an item is selected
+         */
+        public void onItemSelected(String date);
+    }
+
+    public ForecastFragment () {
+
+    }
 
     @Override
     public void onActivityCreated(Bundle saveDInstanceState) {
@@ -124,14 +138,18 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                ForecastAdapter adapter = (ForecastAdapter) adapterView.getAdapter();
-                Cursor cursor = adapter.getCursor();
-                if (null != cursor && cursor.moveToPosition(position)) {
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .putExtra(DetailActivityFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
-                    startActivity(intent);
+                Cursor cursor = forecastAdapter.getCursor();
+                if (cursor != null && cursor.moveToPosition(position)) {
+                    ((Callback) getActivity()).onItemSelected(cursor.getString(COL_WEATHER_DATE));
                 }
-                mPosition = position;
+//                ForecastAdapter adapter = (ForecastAdapter) adapterView.getAdapter();
+//                Cursor cursor = adapter.getCursor();
+//                if (null != cursor && cursor.moveToPosition(position)) {
+//                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+//                            .putExtra(DetailActivityFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
+//                    startActivity(intent);
+//                }
+//                mPosition = position;
 
             }
         });

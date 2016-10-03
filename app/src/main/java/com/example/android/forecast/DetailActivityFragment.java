@@ -65,6 +65,17 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
     public TextView pressureView;
 
 
+    public static Fragment newInstance(String date) {
+        // Create a detail activity fragment
+        Bundle args = new Bundle();
+        args.putString(DATE_KEY, date);
+
+        DetailActivityFragment fragment = new DetailActivityFragment();
+        fragment.setArguments(args);
+
+        return fragment;
+    }
+
     public DetailActivityFragment() {
         setHasOptionsMenu(true);
     }
@@ -74,9 +85,12 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
         super.onActivityCreated(savedInstanceState);
         // grab the saved location if saved before
         if (null != savedInstanceState) {
-
+            mLocation = savedInstanceState.getString(LOCATION_KEY);
         }
-        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        Intent intent = getActivity().getIntent();
+        if (intent != null && intent.hasExtra(DetailActivity.DATE_KEY)) {
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        }
     }
 
     @Override
@@ -146,7 +160,11 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
     @Override
     public void onResume() {
         super.onResume();
-        if (null != mLocation && !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
+        Intent intent = getActivity().getIntent();
+        if (
+                null != mLocation &&
+                intent.hasExtra(DetailActivity.DATE_KEY) &&
+                !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }

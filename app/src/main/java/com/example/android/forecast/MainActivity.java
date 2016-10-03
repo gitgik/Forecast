@@ -11,7 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private boolean mTwoPane;
@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void openPreferredLocationInMap() {
 
-
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         String location = sharedPrefs.getString(
                 getString(R.string.pref_location_key),
@@ -89,5 +88,23 @@ public class MainActivity extends AppCompatActivity {
             Log.d(LOG_TAG, "MAP ERROR: Could not call " + location);
         }
 
+    }
+
+    @Override
+    public void onItemSelected(String date) {
+        if (mTwoPane) {
+            // In two-pane mode, show the detail view in this activity by
+            // adding or replacing the detail fragment using a fragment
+            // transaction
+
+            getSupportFragmentManager().beginTransaction().replace(
+                    R.id.weather_detail_container,
+                    DetailActivityFragment.newInstance(date)).commit();
+
+        } else {
+            Intent intent = new Intent(this, DetailActivity.class);
+            intent.putExtra(DetailActivity.DATE_KEY, date);
+            startActivity(intent);
+        }
     }
 }
