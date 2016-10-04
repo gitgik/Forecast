@@ -29,6 +29,8 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     private String mLocation;
     private int mPosition;
+    private ListView listView;
+
     private static final String LOCATION_KEY = "location";
     private static final String POSITION_KEY = "position";
 
@@ -60,6 +62,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
 
     private ForecastAdapter forecastAdapter;
+    private boolean mUseTodayLayout;
 
     /**
      * A callback interface that all activities containing this fragment
@@ -95,6 +98,14 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         weatherTask.execute(Utility.getPreferredLocation(getActivity()));
     }
 
+    public void setUseTodayLayout (boolean useTodayLayout)
+    {
+        mUseTodayLayout = useTodayLayout;
+        if (forecastAdapter != null) {
+            forecastAdapter.setUseTodayLayout(useTodayLayout);
+        }
+    }
+
     @Override
     public void onStart () {
         super.onStart();
@@ -126,12 +137,19 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
         // Get a reference to list view and attach the adapter to it.
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+
 
         // Create our custom adapter.
         // Unlike simple cursor adapter: No need to define db columns it should be mapping
         // The simple cursor adapter takes raw data and populates the ListView it is attached to.
         forecastAdapter = new ForecastAdapter(getActivity(), null, 0);
+
+        // Activity on create might call before onCreateView
+        // when the adapter is null
+        // Therefore, we use mUserTodayLayout value to the adapter here too
+        forecastAdapter.setUseTodayLayout(mUseTodayLayout);
+
         listView.setAdapter(forecastAdapter);
         // Listen for clicks on the item
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -214,7 +232,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         if (!mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
         } else if (mPosition != ListView.INVALID_POSITION) {
-
+            listView.setSelection(mPosition);
         }
     }
 

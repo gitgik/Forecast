@@ -41,6 +41,11 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         } else {
             mTwoPane = false;
         }
+
+        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment));
+
+        forecastFragment.setUseTodayLayout(!mTwoPane);
     }
 
     @Override
