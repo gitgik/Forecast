@@ -17,4 +17,7 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="ForecastListStyle">
+        <!-- For two-pane layout in screens with sufficient width -->
+    </style>
 </resources>
