@@ -1,9 +1,36 @@
-<resources>
+ <resources>
+     <!-- Base application theme. -->
+     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+         <!-- Customize your theme here. -->
+         <item name="colorPrimary">@color/colorPrimary</item>
+         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+         <item name="colorAccent">@color/colorAccent</item>
+     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-    </style>
-</resources>
+     <style name="AppTheme.NoActionBar">
+         <item name="windowActionBar">false</item>
+         <item name="windowNoTitle">true</item>
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:statusBarColor">@android:color/transparent</item>
+     </style>
+
+     <!-- Action bar style -->
+     <style name="ActionBar.Solid.Forecast" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+         <item name="background">@color/colorPrimary</item>
+     </style>
+
+     <!-- Main activity action bar style -->
+     <style name="ActionBar.Solid.Forecast.NoTitle"
+         parent="@style/ActionBar.Solid.Forecast">
+         <item name="displayOptions">useLogo|showHome</item>
+         <item name="logo">@drawable/ic_logo</item>
+     </style>
+
+     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+     <style name="ForecastListStyle">
+         <!-- For two-pane layout in screens with sufficient width -->
+     </style>
+ </resources>

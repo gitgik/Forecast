@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- State when the item is being pressed but not yet activated -->
+    <item android:state_pressed="true" android:drawable="@color/colorGrey"></item>
+
+    <!-- When the item is activated -->
+    <item android:state_activated="true" android:drawable="@color/colorPrimary"></item>
+
+
+    <!-- When not activated -->
+    <item android:drawable="@android:color/transparent"></item>
+</selector>
