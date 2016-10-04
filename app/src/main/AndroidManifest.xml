@@ -52,6 +52,9 @@
             android:name=".data.WeatherProvider"
             android:enabled="true"
             android:exported="true"/>
+
+        <!-- The Forecast service -->
+        <service android:name=".service.ForecastService" />
     </application>
 
 </manifest>
