@@ -149,12 +149,30 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 //                            .putExtra(DetailActivityFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
 //                    startActivity(intent);
 //                }
-//                mPosition = position;
+                // whenever the item is clicked, update it's position
+                mPosition = position;
 
             }
         });
 
+        // If there is an instance state, mine it for information
+        // This will make the app feel more fluid when the device is rotated
+        if (savedInstanceState != null && savedInstanceState.containsKey(POSITION_KEY)) {
+            mPosition = savedInstanceState.getInt(POSITION_KEY);
+        }
+
         return rootView;
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablet rotates, the currently selected item needs to be saved
+        // When no item is selected, mPosition will be set to ListView.INVALID_POSITION
+        if (mPosition != ListView.INVALID_POSITION) {
+            outState.putInt(POSITION_KEY, mPosition);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
