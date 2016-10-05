@@ -9,7 +9,8 @@
     <ImageView
         android:id="@+id/list_item_icon"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
         android:src="@drawable/common_google_signin_btn_icon_dark"/>
 
 
