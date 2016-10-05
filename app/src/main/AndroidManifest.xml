@@ -53,16 +53,10 @@
                 android:value="com.example.android.forecast.MainActivity" />
         </activity>
         <provider
-            android:authorities="com.example.android.forecast"
+            android:authorities="@string/content_authority"
             android:name=".data.WeatherProvider"
             android:syncable="true"
-            android:enabled="true"
             android:exported="false"/>
-
-        <!-- The Forecast service -->
-        <service android:name=".service.ForecastService" />
-
-        <receiver android:name=".service.ForecastService$AlarmReceiver" />
 
         <!-- Sync adapter dummy authentication service -->
         <service android:name=".sync.ForecastAuthenticatorService">

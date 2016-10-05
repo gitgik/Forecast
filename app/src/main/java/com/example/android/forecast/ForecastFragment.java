@@ -1,9 +1,5 @@
 package com.example.android.forecast;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,7 +19,7 @@ import android.widget.ListView;
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
 import com.example.android.forecast.data.ForecastContract.WeatherEntry;
-import com.example.android.forecast.service.ForecastService;
+import com.example.android.forecast.sync.ForecastSyncAdapter;
 
 import java.util.Date;
 
@@ -99,22 +95,20 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     }
 
     private void updateWeather () {
+        ForecastSyncAdapter.syncImmediately(getActivity());
 
-        Intent alarmIntent = new Intent(getActivity(), ForecastService.AlarmReceiver.class);
-        alarmIntent.putExtra(ForecastService.LOCATION_QUERY_EXTRA, mLocation);
-
-        PendingIntent pIntent = PendingIntent.getBroadcast(getActivity(), 0, alarmIntent,
-                PendingIntent.FLAG_ONE_SHOT); // Used once hence flag_one_shot
-        AlarmManager am = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+ 5000, pIntent);
-
-        Intent intent = new Intent(getActivity(), ForecastService.class);
-        intent.putExtra(ForecastService.LOCATION_QUERY_EXTRA,
-                Utility.getPreferredLocation(getActivity()));
-        getActivity().startService(intent);
-
-//        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
-//        weatherTask.execute(Utility.getPreferredLocation(getActivity()));
+//        Intent alarmIntent = new Intent(getActivity(), ForecastService.AlarmReceiver.class);
+//        alarmIntent.putExtra(ForecastService.LOCATION_QUERY_EXTRA, mLocation);
+//
+//        PendingIntent pIntent = PendingIntent.getBroadcast(getActivity(), 0, alarmIntent,
+//                PendingIntent.FLAG_ONE_SHOT); // Used once hence flag_one_shot
+//        AlarmManager am = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+//        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+ 5000, pIntent);
+//
+//        Intent intent = new Intent(getActivity(), ForecastService.class);
+//        intent.putExtra(ForecastService.LOCATION_QUERY_EXTRA,
+//                Utility.getPreferredLocation(getActivity()));
+//        getActivity().startService(intent);
     }
 
     public void setUseTodayLayout (boolean useTodayLayout)
@@ -128,7 +122,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     @Override
     public void onStart () {
         super.onStart();
-        // updateWeather();
+        updateWeather();
     }
 
     @Override
@@ -250,8 +244,6 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
         if (!mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
-        } else if (mPosition != ListView.INVALID_POSITION) {
-            listView.setSelection(mPosition);
         }
     }
 

@@ -51,9 +51,14 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         super(context, autoInitialize);
     }
 
+    public static void initializeSyncAdapter(Context context) {
+        getSyncAccount(context);
+    }
+
     @Override
-    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        Log.d(LOG_TAG, "SYNCING ON PERFORM SYNC...");
+    public void onPerformSync(Account account, Bundle extras, String authority,
+                              ContentProviderClient provider, SyncResult syncResult) {
+        Log.d(LOG_TAG, "===========================>>>>  SYNCING ON PERFORM SYNC...");
         String locationQuery = Utility.getPreferredLocation(getContext());
         if (locationQuery == null || locationQuery.isEmpty()) {
             return;
@@ -76,8 +81,8 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
 
-        Account account = getSyncAccount(context);
-        ContentResolver.requestSync(account, context.getString(R.string.content_authority), bundle);
+        ContentResolver.requestSync(
+                getSyncAccount(context), context.getString(R.string.content_authority), bundle);
     }
 
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
@@ -90,6 +95,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     .syncPeriodic(syncInterval, flexTime)
                     .setSyncAdapter(account, authority)
                     .build();
+            ContentResolver.requestSync(request);
         } else {
             ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
         }
@@ -97,9 +103,9 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
     /**
      * Helper method to get the fake accounts to be used with
-     * the sync adapter
-     * @param context
-     * @return
+     * the sync adapter if the fake account does not exist yet.
+     * @param context The context used to access the account service
+     * @return a fake account
      */
     public static Account getSyncAccount(Context context) {
         AccountManager accManager =
@@ -110,14 +116,14 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 context.getString(R.string.sync_account_type));
 
         // If pword does not exist, the account doesn't exist
-        if (accManager.getPassword(newAccount) != null) {
-            if (!accManager.addAccountExplicitly(newAccount, "", null)) {
+        if (accManager.getPassword(newAccount) == null) {
+            if (!accManager.addAccountExplicitly(newAccount, null, null)) {
                 return null;
             }
+            // If you don't set android:syncable="true" in your <provider>
+            // then call context.setIsSyncable(account, AUTHORITY, 1) here
+            onAccountCreated(newAccount, context);
         }
-        // If you don't set android:syncable="true" in your <provider>
-        // then call context.setIsSyncable(account, AUTHORITY, 1) here
-
         return newAccount;
     }
 
@@ -132,10 +138,6 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
         // Do a sync to get things started
         syncImmediately(context);
-    }
-
-    public static void initializeSyncAdapter(Context context) {
-        getSyncAccount(context);
     }
 
     private void getWeatherDataFromJson(String forecastJsonString, String locationSetting) throws

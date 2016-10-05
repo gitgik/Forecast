@@ -11,6 +11,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.example.android.forecast.sync.ForecastSyncAdapter;
+
 public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -22,30 +24,36 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment));
+
         if (findViewById(R.id.weather_detail_container) != null) {
             // The detail container view will be present only in the large
             // screen layouts
             // If this view is present, then the activity will be in two-pane mode
             mTwoPane = true;
 
+            // Do not use today layout in tablets
+            forecastFragment.setUseTodayLayout(false);
+
             // In two-pane mode, show the detail view in this activity by
             // adding a detail fragment using a fragment transaction
 
-            // If bundle exists, let the system handle the restoration itself
-            // thus we have to check if the bundle is null
-            if (savedInstanceState == null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.weather_detail_container, new DetailActivityFragment())
-                        .commit();
-            }
+            Bundle arguments = new Bundle();
+            DetailActivityFragment fragment = new DetailActivityFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.weather_detail_container, fragment)
+                    .commit();
+
         } else {
             mTwoPane = false;
         }
 
-        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.fragment));
-
-        forecastFragment.setUseTodayLayout(!mTwoPane);
+        forecastFragment.setUseTodayLayout(true);
+        // Make sure we have an account created to allow sync
+        ForecastSyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override
