@@ -8,7 +8,7 @@
     android:gravity="center_vertical"
     android:paddingTop="16dp"
     android:paddingBottom="16dp"
-    android:background="@drawable/touch_selector"
+    android:background="@color/colorPrimary"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
     <LinearLayout
@@ -26,7 +26,7 @@
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
             android:text="Today"
-            android:textColor="@drawable/touch_text"
+            android:textColor="@android:color/white"
             />
 
         <TextView
@@ -36,7 +36,7 @@
             android:textSize="72sp"
             android:fontFamily="sans-serif-light"
             android:text="22"
-            android:textColor="@drawable/touch_text"
+            android:textColor="@android:color/white"
             />
 
         <TextView
@@ -46,7 +46,7 @@
             android:textSize="36sp"
             android:fontFamily="sans-serif-light"
             android:text="12"
-            android:textColor="@drawable/touch_text"
+            android:textColor="@android:color/white"
             />
 
     </LinearLayout>
@@ -71,7 +71,7 @@
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"
             android:text="Clear"
-            android:textColor="@drawable/touch_text"
+            android:textColor="@android:color/white"
             />
 
     </LinearLayout>

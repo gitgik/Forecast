@@ -11,6 +11,7 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.util.Log;
 
+import com.example.android.forecast.Utility;
 import com.example.android.forecast.data.ForecastContract;
 
 import org.json.JSONArray;
@@ -328,7 +329,10 @@ public class ForecastService extends IntentService {
     static public class AlarmReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            Intent startServiceIntent = new Intent(context, ForecastService.class);
+            startServiceIntent.putExtra(ForecastService.LOCATION_QUERY_EXTRA,
+                    Utility.getPreferredLocation(context));
+            context.startService(startServiceIntent);
         }
     }
 
