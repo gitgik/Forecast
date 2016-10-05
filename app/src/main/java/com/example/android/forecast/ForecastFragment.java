@@ -122,7 +122,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     @Override
     public void onStart () {
         super.onStart();
-        updateWeather();
+        // updateWeather();
     }
 
     @Override
