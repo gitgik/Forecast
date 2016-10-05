@@ -1,8 +1,10 @@
 package com.example.android.forecast.service;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -32,7 +34,7 @@ public class ForecastService extends IntentService {
 
     private final String LOG_TAG = ForecastService.class.getSimpleName();
     private static boolean DEBUG = true;
-    private static final String LOCATION_QUERY_EXTRA = "lqe";
+    public static final String LOCATION_QUERY_EXTRA = "lqe";
     
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -322,4 +324,12 @@ public class ForecastService extends IntentService {
             }
         }
     }
+
+    static public class AlarmReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+        }
+    }
+
 }

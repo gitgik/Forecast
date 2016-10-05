@@ -55,6 +55,8 @@
 
         <!-- The Forecast service -->
         <service android:name=".service.ForecastService" />
+
+        <receiver android:name=".service.ForecastService$AlarmReceiver" />
     </application>
 
 </manifest>

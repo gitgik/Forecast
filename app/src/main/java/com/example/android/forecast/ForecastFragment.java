@@ -1,5 +1,6 @@
 package com.example.android.forecast;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.widget.ListView;
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
 import com.example.android.forecast.data.ForecastContract.WeatherEntry;
+import com.example.android.forecast.service.ForecastService;
 
 import java.util.Date;
 
@@ -94,8 +96,12 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     }
 
     private void updateWeather () {
-        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
-        weatherTask.execute(Utility.getPreferredLocation(getActivity()));
+        Intent intent = new Intent(getActivity(), ForecastService.class);
+        intent.putExtra(ForecastService.LOCATION_QUERY_EXTRA,
+                Utility.getPreferredLocation(getActivity()));
+        getActivity().startService(intent);
+//        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
+//        weatherTask.execute(Utility.getPreferredLocation(getActivity()));
     }
 
     public void setUseTodayLayout (boolean useTodayLayout)
