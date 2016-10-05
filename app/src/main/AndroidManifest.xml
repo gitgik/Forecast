@@ -5,9 +5,14 @@
     <!-- For network access -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permissions required by the sync adapter -->
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
@@ -50,13 +55,24 @@
         <provider
             android:authorities="com.example.android.forecast"
             android:name=".data.WeatherProvider"
+            android:syncable="true"
             android:enabled="true"
-            android:exported="true"/>
+            android:exported="false"/>
 
         <!-- The Forecast service -->
         <service android:name=".service.ForecastService" />
 
         <receiver android:name=".service.ForecastService$AlarmReceiver" />
+
+        <!-- Sync adapter dummy authentication service -->
+        <service android:name=".sync.ForecastAuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
     </application>
 
 </manifest>
