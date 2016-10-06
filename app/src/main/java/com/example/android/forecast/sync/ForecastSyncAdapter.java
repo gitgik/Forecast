@@ -208,17 +208,15 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     // Define the text of the forecast.
                     String highFormat = Utility.formatTemperature(context, high, Utility.isMetric(context));
                     String lowFormat = Utility.formatTemperature(context, low, Utility.isMetric(context));
-                    String contextText = String.format(
+                    String contextHeader = String.format(
                             context.getString(R.string.format_notification),
-                            highFormat, locationQuery, description
-                    );
+                            highFormat, locationQuery);
 
                     // Build our notification using the NotificationCompat.builder
-                    NotificationCompat.Builder mBuilder =
-                            new NotificationCompat.Builder(context)
+                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                                     .setSmallIcon(iconId)
-                                    .setContentTitle(title)
-                                    .setContentText(contextText);
+                                    .setContentTitle(contextHeader)
+                                    .setContentText(description);
 
                     // Create an explicit intent for the main activity
                     Intent resultIntent = new Intent(context, MainActivity.class);
@@ -232,7 +230,8 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     mBuilder.setContentIntent(resultPendingIntent);
                     NotificationManager mNotificationManager =
                             (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                    // mID allows you to update the notification later on
+
+                    // notificationID allows you to update the notification later on
                     mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
 
 
@@ -242,7 +241,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     editor.commit();
                 }
             }
-        }
+         }
     }
 
     private void getWeatherDataFromJson(String forecastJsonString, String locationSetting) throws
@@ -271,7 +270,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         final String OWM_MIN = "min";
 
         final String OWM_WEATHER = "weather";
-        final String OWM_DESCRIPTION = "main";
+        final String OWM_DESCRIPTION = "description";
         final String OWM_WEATHER_ID = "id";
 
         JSONObject forecastJson = new JSONObject(forecastJsonString);
