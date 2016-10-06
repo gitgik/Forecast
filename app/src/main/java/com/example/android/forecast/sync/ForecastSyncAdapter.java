@@ -2,12 +2,14 @@ package com.example.android.forecast.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.database.Cursor;
@@ -15,11 +17,14 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.example.android.forecast.R;
 import com.example.android.forecast.Utility;
 import com.example.android.forecast.data.ForecastContract;
+import com.example.android.forecast.data.ForecastContract.WeatherEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,6 +49,23 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final int SYNC_INTERVAL = 60 * 180;
     private static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
+
+
+    private static final String[] NOTIFY_WEATHER_PROJECTION = {
+            WeatherEntry.COLUMN_WEATHER_ID,
+            WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherEntry.COLUMN_SHORT_DESC
+    };
+
+    // These indices must mach the projection
+    private static final int INDEX_WEATHER_ID = 0;
+    private static final int INDEX_MAX_TEMP = 1;
+    private static final int INDEX_MIN_TEMP = 2;
+    private static final int INDEX_SHORT_DESC = 3;
+
+    private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
+    private static final int WEATHER_NOTIFICATION_ID = 3004;
 
     private boolean DEBUG = true;
 
@@ -138,6 +160,61 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
         // Do a sync to get things started
         syncImmediately(context);
+    }
+
+    private void notifyWeather () {
+        Context context = getContext();
+
+        // Checking the last update and notify if it's the first of the day
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String lastNotificationKey = context.getString(R.string.pref_last_notification);
+        long lastSync = prefs.getLong(lastNotificationKey, 0);
+
+        // Only send the next notification after 24 hours
+        if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
+            String locationQuery = Utility.getPreferredLocation(context);
+
+            Uri weatherUri = WeatherEntry.buildWeatherLocationWithDate(
+                    locationQuery, ForecastContract.getDbDateString(new Date()));
+
+            // Query using a cursor
+            Cursor cursor = context.getContentResolver().query(
+                    weatherUri,
+                    NOTIFY_WEATHER_PROJECTION,
+                    null,
+                    null,
+                    null);
+
+            if (cursor.moveToFirst()) {
+                int weatherId = cursor.getInt(INDEX_WEATHER_ID);
+                double high = cursor.getDouble(INDEX_MAX_TEMP);
+                double low = cursor.getDouble(INDEX_MIN_TEMP);
+                String description = cursor.getString(INDEX_SHORT_DESC);
+
+                int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
+                String title = context.getString(R.string.app_name);
+
+                // Define the text of the forecast.
+                String highFormat = Utility.formatTemperature(context, high, Utility.isMetric(context));
+                String lowFormat = Utility.formatTemperature(context, low, Utility.isMetric(context));
+                String contextText = String.format(
+                        context.getString(R.string.format_notification),
+                        highFormat, locationQuery, description
+                );
+
+                // Build our notification using the NoticationCompat.builder
+                NotificationCompat.Builder mBuilder =
+                        new NotificationCompat.Builder(context)
+                        .setSmallIcon(iconId)
+                        .setContentTitle(title)
+                        .setContentText(contextText);
+
+                // Refreshing last sync
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putLong(lastNotificationKey, System.currentTimeMillis());
+                editor.commit();
+            }
+        }
     }
 
     private void getWeatherDataFromJson(String forecastJsonString, String locationSetting) throws
