@@ -34,9 +34,20 @@
 
     <!-- Notification format -->
     <string name="format_notification">
-        <xliff:g id="high">%1$s</xliff:g> in <xliff:g id="location"></xliff:g>
-        <xliff:g id="condition">%2$s</xliff:g>
+        <xliff:g id="high">%1$s</xliff:g> in <xliff:g id="location">%2$s</xliff:g>
+        <xliff:g id="condition">%3$s</xliff:g>
     </string>
+
+
+    <!-- Notification Enabled preference -->
+    <string name="enable_notifications_key" translatable="false">
+        enable_notifications
+    </string>
+    <string name="enable_notifications_label">Weather Notifications</string>
+    <string name="enable_notifications_true">Enabled</string>
+    <string name="enable_notifications_false">Not Enabled</string>
+    <string name="enable_notifications_default" translatable="false">true</string>
+
 
     <!-- String related to temperature-->
     <string name="pref_units_label">Temperature Units</string>

@@ -2,13 +2,15 @@ package com.example.android.forecast.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
@@ -19,8 +21,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
+import com.example.android.forecast.MainActivity;
 import com.example.android.forecast.R;
 import com.example.android.forecast.Utility;
 import com.example.android.forecast.data.ForecastContract;
@@ -202,12 +206,28 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                         highFormat, locationQuery, description
                 );
 
-                // Build our notification using the NoticationCompat.builder
+                // Build our notification using the NotificationCompat.builder
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(context)
                         .setSmallIcon(iconId)
                         .setContentTitle(title)
                         .setContentText(contextText);
+
+                // Create an explicit intent for the main activity
+                Intent resultIntent = new Intent(context, MainActivity.class);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                stackBuilder.addParentStack(MainActivity.class);
+
+                // Add the Intent that starts the Activity to the top of the stack
+                stackBuilder.addNextIntent(resultIntent);
+                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
+                        0, PendingIntent.FLAG_UPDATE_CURRENT);
+                mBuilder.setContentIntent(resultPendingIntent);
+                NotificationManager mNotificationManager =
+                        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                // mID allows you to update the notification later on
+                mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
+
 
                 // Refreshing last sync
                 SharedPreferences.Editor editor = prefs.edit();
