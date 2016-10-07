@@ -152,6 +152,10 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         // Get a reference to list view and attach the adapter to it.
         listView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
+        View emptyView = rootView.findViewById(R.id.listview_forecast_empty);
+        listView.setEmptyView(emptyView);
+        listView.setAdapter(forecastAdapter);
+
 
         // Create our custom adapter.
         // Unlike simple cursor adapter: No need to define db columns it should be mapping

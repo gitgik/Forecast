@@ -6,6 +6,12 @@
     <string name="title_activity_detail">Details</string>
     <string name="title_activity_settings">Settings</string>
 
+    <!-- Label for empty string -->
+    <string name="empty_forecast">No Weather Forecast Info Available.</string>
+
+    <!-- Label for no internet connectivity -->
+    <string name="no_internet">You have no internet connection to fetch weather data.</string>
+
     <!-- Label for location preference -->
     <string name="pref_location_lable">Location</string>
 
