@@ -15,6 +15,9 @@
     <!-- Label for location preference -->
     <string name="pref_location_lable">Location</string>
 
+    <!-- Key name for storing location in SharedPreferences [CHAR LIMIT=NONE] -->
+    <string name="pref_location_status_key" translatable="false">loc-status</string>
+
     <!-- Key for storing location location in SharedPreferences -->
     <string name="pref_location_key" translatable="false">location</string>
 
