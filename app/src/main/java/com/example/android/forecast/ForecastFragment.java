@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.data.ForecastContract.LocationEntry;
@@ -249,6 +250,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         if (!mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
         }
+        updateEmptyView();
     }
 
     @Override
@@ -256,4 +258,18 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         // Put in null to clear the data
         forecastAdapter.swapCursor(null);
     }
-}
+
+    private void updateEmptyView() {
+        if (forecastAdapter.getCount() == 0) {
+            TextView tv  = (TextView) getView().findViewById(R.id.listview_forecast_empty);
+            if (null != tv) {
+                // if cursor is empty
+                int message = R.string.empty_forecast;
+                if (!Utility.isNetworkAvailable(getActivity())) {
+                    message = R.string.no_internet;
+                }
+                tv.setText(message);
+            }
+        }
+    }
+ }

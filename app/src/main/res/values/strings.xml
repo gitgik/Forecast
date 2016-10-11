@@ -10,7 +10,7 @@
     <string name="empty_forecast">No Weather Forecast Info Available.</string>
 
     <!-- Label for no internet connectivity -->
-    <string name="no_internet">You have no internet connection to fetch weather data.</string>
+    <string name="no_internet">Oops! No weather information available. You have no internet connection to fetch weather data.</string>
 
     <!-- Label for location preference -->
     <string name="pref_location_lable">Location</string>

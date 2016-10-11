@@ -235,7 +235,13 @@ public class Utility {
         return -1;
     }
 
-    public static boolean checkInternetConnection(Context context) {
+
+    /**
+     * Check whether network is available for fetching weather data
+     * @param context
+     * @return isConnected
+     */
+    public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager cm = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
