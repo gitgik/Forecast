@@ -78,13 +78,14 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Retention(RetentionPolicy.SOURCE) // Retain only for our source code
     @IntDef({LOCATION_STATUS_OK, LOCATION_STATUS_SERVER_DOWN, LOCATION_STATUS_SERVER_INVALID,
-    LOCATION_STATUS_UNKNOWN})
+    LOCATION_STATUS_UNKNOWN, LOCATION_STATUS_INVALID})
     public @interface LocationStatus {}
 
     public static final int LOCATION_STATUS_OK = 0;
     public static final int LOCATION_STATUS_SERVER_DOWN = 1;
     public static final int LOCATION_STATUS_SERVER_INVALID = 2;
     public static final int LOCATION_STATUS_UNKNOWN = 3;
+    public static final int LOCATION_STATUS_INVALID = 4;
 
     private boolean DEBUG = true;
 
@@ -315,7 +316,25 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         final String OWM_DESCRIPTION = "description";
         final String OWM_WEATHER_ID = "id";
 
+        final String OWN_MESSAGE_CODE = "cod";
+
         JSONObject forecastJson = new JSONObject(forecastJsonString);
+
+        if (forecastJson.has(OWN_MESSAGE_CODE)) {
+            int errorCode = forecastJson.getInt(OWN_MESSAGE_CODE);
+
+            switch (errorCode) {
+                case HttpURLConnection.HTTP_OK:
+                    break;
+                case HttpURLConnection.HTTP_NOT_FOUND:
+                    setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
+                    return;
+                default:
+                    setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
+                    return;
+            }
+        }
+
         JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
 
         JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
@@ -441,6 +460,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 return  null;
             }
             forecastJsonString = buffer.toString();
+
             // log the json string
             Log.v(LOG_TAG, "JSON: " + forecastJsonString);
 

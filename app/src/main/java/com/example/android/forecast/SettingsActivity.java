@@ -30,35 +30,26 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener =
             new Preference.OnPreferenceChangeListener() {
 
-        boolean mBindingPreferences = false;
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
+                boolean mBindingPreferences = false;
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object value) {
+                    String stringValue = value.toString();
 
-            if (!mBindingPreferences) {
-                if (preference.getKey().equals(getString(R.string.pref_location_key))) {
-                    ForecastSyncAdapter.syncImmediately(preference.getContext());
-                } else {
-                    // notify code that weather may be affected
-                    getContentResolver().notifyChange(
-                            ForecastContract.WeatherEntry.CONTENT_URI, null);
+                    if (!mBindingPreferences) {
+                        Utility.resetLocationStatus(preference.getContext());
+                        ForecastSyncAdapter.syncImmediately(preference.getContext());
+                    } else {
+                        // notify code that weather may be affected
+                        getContentResolver().notifyChange(
+                                ForecastContract.WeatherEntry.CONTENT_URI, null);
+                    }
+
+                    // For all other preferences, set the summary to the value's
+                    // simple string representation.
+                    preference.setSummary(stringValue);
+                    return true;
                 }
-            }
-
-            // For all other preferences, set the summary to the value's
-            // simple string representation.
-            preference.setSummary(stringValue);
-            return true;
-        }
-    };
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    @Override
-    public Intent getParentActivityIntent() {
-        // Add a flag checks whether MainActivity is already running, and to use it instead
-        // of creating a new MainActivity instance
-        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    }
+            };
 
     /**
      * Binds a preference's summary to its value. More specifically, when the
@@ -81,6 +72,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         .getDefaultSharedPreferences(preference.getContext())
                         .getString(preference.getKey(), ""));
     }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    public Intent getParentActivityIntent() {
+        // Add a flag checks whether MainActivity is already running, and to use it instead
+        // of creating a new MainActivity instance
+        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

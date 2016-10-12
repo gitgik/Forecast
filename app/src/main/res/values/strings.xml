@@ -106,4 +106,5 @@
     <string name="no_internet">No Weather Forecast Info Available due to no Internet connectivity.</string>
     <string name="server_down">No Weather Forecast Info Available. The server seems to be down at the moment</string>
     <string name="server_error">No Weather Forecast Info Available. The server is not returning any data</string>
+    <string name="invalid_location">Oops! You have entered an invalid location. Please enter a valid city name or postal code</string>
 </resources>

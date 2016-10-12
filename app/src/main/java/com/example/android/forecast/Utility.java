@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.sync.ForecastSyncAdapter;
@@ -252,7 +253,7 @@ public class Utility {
 
 
     /**
-     *
+     * Gets the location status
      * @param c Context used to get the SharedPreferences
      * @return the location status integer type
      */
@@ -262,5 +263,19 @@ public class Utility {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
         return sp.getInt(c.getString(R.string.pref_location_status_key),
                 ForecastSyncAdapter.LOCATION_STATUS_UNKNOWN);
+    }
+
+    /**
+     * Resets the location status
+     * @param c Context used to get the  shared preferences
+     */
+    public static void resetLocationStatus(Context c) {
+        Log.d("UTILITY", "RESETTING LOCATION STATUS");
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(c.getString(
+                R.string.pref_location_status_key),
+                ForecastSyncAdapter.LOCATION_STATUS_UNKNOWN);
+        spe.apply(); // use this rather than commit() since it will be called from the UI thread
     }
 }

@@ -274,13 +274,16 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         forecastAdapter.swapCursor(null);
     }
 
+    /**
+     * Update the empty view based on the location status(SERVER STATUS)
+     * and the network state of the phone
+     */
     private void updateEmptyView() {
         if (forecastAdapter.getCount() == 0) {
             TextView tv  = (TextView) getView().findViewById(R.id.listview_forecast_empty);
             if (null != tv) {
                 // if cursor is empty
                 int message = R.string.empty_forecast;
-
                 @ForecastSyncAdapter.LocationStatus int location = Utility.getLocationStatus(getActivity());
                 switch (location) {
                     case ForecastSyncAdapter.LOCATION_STATUS_SERVER_DOWN:
@@ -288,6 +291,9 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
                         break;
                     case ForecastSyncAdapter.LOCATION_STATUS_SERVER_INVALID:
                         message = R.string.server_error;
+                        break;
+                    case ForecastSyncAdapter.LOCATION_STATUS_INVALID:
+                        message = R.string.invalid_location;
                         break;
                     default:
                         // There is no internet connection
@@ -302,7 +308,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(getString(R.string.pref_location_status_key))) {
+        if (key.equals(getString(R.string.pref_location_key))) {
             updateEmptyView();
         }
     }
