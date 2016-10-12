@@ -19,6 +19,7 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.preference.PreferenceManager;
 import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationCompat;
@@ -355,6 +356,17 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
             // Get and insert the new weather information into the database
             Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
 
+            // Returns the forecast based upon the local time of the city
+            // Use the GMT offset to translate this data properly
+            Time dayTime = new Time();
+            dayTime.setToNow();
+
+            // Start at the day returned by local time
+            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
+
+            // Work using UTC
+            dayTime = new Time();
+
             for(int i = 0; i < weatherArray.length(); i++) {
                 //  These are the values that will be collected
 
@@ -376,7 +388,10 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 // The date/time is returned as a long.  We need to convert that
                 // into something human-readable, since most people won't read "1400356800" as
                 // "this saturday".
-                dateTime = dayForecast.getLong(OWM_DATETIME);
+                // dateTime = dayForecast.getLong(OWM_DATETIME);
+                // CONVERT THIS TO UTO TIME
+                dateTime = dayTime.setJulianDay(julianStartDay+i);
+
 
                 pressure = dayForecast.getDouble(OWM_PRESSURE);
                 humidity = dayForecast.getInt(OWM_HUMIDITY);
