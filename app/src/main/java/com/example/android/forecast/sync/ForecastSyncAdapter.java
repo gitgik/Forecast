@@ -318,97 +318,109 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
         final String OWN_MESSAGE_CODE = "cod";
 
-        JSONObject forecastJson = new JSONObject(forecastJsonString);
+        try {
+            JSONObject forecastJson = new JSONObject(forecastJsonString);
 
-        if (forecastJson.has(OWN_MESSAGE_CODE)) {
-            int errorCode = forecastJson.getInt(OWN_MESSAGE_CODE);
+            if (forecastJson.has(OWN_MESSAGE_CODE)) {
+                int errorCode = forecastJson.getInt(OWN_MESSAGE_CODE);
 
-            switch (errorCode) {
-                case HttpURLConnection.HTTP_OK:
-                    break;
-                case HttpURLConnection.HTTP_NOT_FOUND:
-                    setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
-                    return;
-                default:
-                    setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
-                    return;
+                switch (errorCode) {
+                    case HttpURLConnection.HTTP_OK:
+                        break;
+                    case HttpURLConnection.HTTP_BAD_GATEWAY:
+                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
+                        return;
+                    case HttpURLConnection.HTTP_NOT_FOUND:
+                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
+                        return;
+                    default:
+                        setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
+                        return;
+                }
             }
+
+            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
+
+            JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
+            String cityName = cityJson.getString(OWM_CITY_NAME);
+            JSONObject coordJSON = cityJson.getJSONObject(OWM_COORD);
+            double cityLatitude = coordJSON.getDouble(OWM_COORD_LAT);
+            double cityLongitude = coordJSON.getDouble(OWM_COORD_LONG);
+
+            /** Insert the location into the database. */
+            long locationID = insertLocationIntoDB(
+                    locationSetting, cityName, cityLatitude, cityLongitude
+            );
+
+            // Get and insert the new weather information into the database
+            Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
+
+            for(int i = 0; i < weatherArray.length(); i++) {
+                //  These are the values that will be collected
+
+                long dateTime;
+                double pressure;
+                int humidity;
+                double windSpeed;
+                double windDirection;
+
+                double high;
+                double low;
+
+                String description;
+                int weatherId;
+
+                // Get the JSON object representing the day
+                JSONObject dayForecast = weatherArray.getJSONObject(i);
+
+                // The date/time is returned as a long.  We need to convert that
+                // into something human-readable, since most people won't read "1400356800" as
+                // "this saturday".
+                dateTime = dayForecast.getLong(OWM_DATETIME);
+
+                pressure = dayForecast.getDouble(OWM_PRESSURE);
+                humidity = dayForecast.getInt(OWM_HUMIDITY);
+                windSpeed = dayForecast.getDouble(OWM_WINDSPEED);
+                windDirection = dayForecast.getDouble(OWM_WIND_DIRECTION);
+
+                // description is in a child array called "weather", which is 1 element long.
+                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
+                description = weatherObject.getString(OWM_DESCRIPTION);
+                weatherId = weatherObject.getInt(OWM_WEATHER_ID);
+
+                // Temperatures are in a child object called "temp".  Try not to name variables
+                // "temp" when working with temperature.  It confuses everybody.
+                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
+                high = temperatureObject.getDouble(OWM_MAX);
+                low = temperatureObject.getDouble(OWM_MIN);
+
+                ContentValues weatherValues = new ContentValues();
+
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_LOC_KEY, locationID);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DATETEXT,
+                        ForecastContract.getDbDateString(new Date(dateTime * 1000L)));
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_PRESSURE, pressure);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DEGREES, windDirection);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP, high);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP, low);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC, description);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
+
+                cVVector.add(weatherValues);
+            }
+
+            /** Insert weather data into database */
+            insertWeatherIntoDatabase(cVVector);
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
+            e.printStackTrace();
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         }
 
-        JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
 
-        JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
-        String cityName = cityJson.getString(OWM_CITY_NAME);
-        JSONObject coordJSON = cityJson.getJSONObject(OWM_COORD);
-        double cityLatitude = coordJSON.getDouble(OWM_COORD_LAT);
-        double cityLongitude = coordJSON.getDouble(OWM_COORD_LONG);
-
-        /** Insert the location into the database. */
-        long locationID = insertLocationIntoDB(
-                locationSetting, cityName, cityLatitude, cityLongitude
-        );
-
-        // Get and insert the new weather information into the database
-        Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
-
-        for(int i = 0; i < weatherArray.length(); i++) {
-            //  These are the values that will be collected
-
-            long dateTime;
-            double pressure;
-            int humidity;
-            double windSpeed;
-            double windDirection;
-
-            double high;
-            double low;
-
-            String description;
-            int weatherId;
-
-            // Get the JSON object representing the day
-            JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-            // The date/time is returned as a long.  We need to convert that
-            // into something human-readable, since most people won't read "1400356800" as
-            // "this saturday".
-            dateTime = dayForecast.getLong(OWM_DATETIME);
-
-            pressure = dayForecast.getDouble(OWM_PRESSURE);
-            humidity = dayForecast.getInt(OWM_HUMIDITY);
-            windSpeed = dayForecast.getDouble(OWM_WINDSPEED);
-            windDirection = dayForecast.getDouble(OWM_WIND_DIRECTION);
-
-            // description is in a child array called "weather", which is 1 element long.
-            JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-            description = weatherObject.getString(OWM_DESCRIPTION);
-            weatherId = weatherObject.getInt(OWM_WEATHER_ID);
-
-            // Temperatures are in a child object called "temp".  Try not to name variables
-            // "temp" when working with temperature.  It confuses everybody.
-            JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
-            high = temperatureObject.getDouble(OWM_MAX);
-            low = temperatureObject.getDouble(OWM_MIN);
-
-            ContentValues weatherValues = new ContentValues();
-
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_LOC_KEY, locationID);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DATETEXT,
-                    ForecastContract.getDbDateString(new Date(dateTime * 1000L)));
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_PRESSURE, pressure);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DEGREES, windDirection);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP, high);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP, low);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC, description);
-            weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
-
-            cVVector.add(weatherValues);
-        }
-
-        /** Insert weather data into database */
-        insertWeatherIntoDatabase(cVVector);
     }
 
     private String getWeatherForecastData (String postalCode) {
