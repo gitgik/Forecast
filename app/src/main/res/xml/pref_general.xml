@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
-    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
-    <EditTextPreference
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res/com.example.android.forecast">
+
+    <!-- Custom edit text preference -->
+
+    <com.example.android.forecast.LocationEditTextPreference
         android:title="@string/pref_location_lable"
         android:key="@string/pref_location_key"
+        android:defaultValue="@string/pref_location_default"
+        android:inputType="text"
         android:singleLine="true"
-        android:selectAllOnFocus="true"
-        android:maxLines="1"
-        android:summary="Enter the city name"
-        android:dialogTitle="Enter your city name"
-        android:defaultValue="@string/pref_location_default">
-    </EditTextPreference>
+        custom:minLength="3"/>
+
 
     <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
          dismiss it. -->

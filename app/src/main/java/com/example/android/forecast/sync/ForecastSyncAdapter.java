@@ -479,9 +479,8 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         } catch (IOException e) {
             Log.e(LOG_TAG, "NETWORK ERROR: ", e);
             e.printStackTrace();
-            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
-            return null;
-        } finally {
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
+        } finally{
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }
