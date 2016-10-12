@@ -58,32 +58,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Pre
         super.onPause();
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(getString(R.string.pref_location_key))) {
-            Utility.getLocationStatus(this);
-            ForecastSyncAdapter.syncImmediately(this);
-        } else if (key.equals(getString(R.string.pref_units_key))) {
-            getContentResolver().notifyChange(ForecastContract.WeatherEntry.CONTENT_URI, null);
-        } else if (key.equals(getString(R.string.pref_location_status_key))) {
-            Preference locationPref = findPreference(getString(R.string.pref_location_key));
-            bindPreferenceSummaryToValue(locationPref);
-        }
-    }
-
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-
-
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object value) {
-        setPreferenceSummary(preference, value);
-        return true;
-    }
-
-
     /**
      * Binds a preference's summary to its value. More specifically, when the
      * preference's value is changed, its summary (line of text below the
@@ -101,14 +75,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Pre
         setPreferenceSummary(preference, PreferenceManager
                 .getDefaultSharedPreferences(preference.getContext())
                 .getString(preference.getKey(), ""));
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    @Override
-    public Intent getParentActivityIntent() {
-        // Add a flag checks whether MainActivity is already running, and to use it instead
-        // of creating a new MainActivity instance
-        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     }
 
     private void setPreferenceSummary(Preference preference, Object value) {
@@ -144,6 +110,41 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Pre
             preference.setSummary(stringValue);
         }
     }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(getString(R.string.pref_location_key))) {
+            Utility.getLocationStatus(this);
+            ForecastSyncAdapter.syncImmediately(this);
+        } else if (key.equals(getString(R.string.pref_units_key))) {
+            getContentResolver().notifyChange(ForecastContract.WeatherEntry.CONTENT_URI, null);
+        } else if (key.equals(getString(R.string.pref_location_status_key))) {
+            Preference locationPref = findPreference(getString(R.string.pref_location_key));
+            bindPreferenceSummaryToValue(locationPref);
+        }
+    }
+
+    /**
+     * A preference value change listener that updates the preference's summary
+     * to reflect its new value.
+     */
+
+
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object value) {
+        setPreferenceSummary(preference, value);
+        return true;
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    public Intent getParentActivityIntent() {
+        // Add a flag checks whether MainActivity is already running, and to use it instead
+        // of creating a new MainActivity instance
+        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
+
+
 
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
