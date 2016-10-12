@@ -3,6 +3,7 @@ package com.example.android.forecast;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -22,7 +23,13 @@ import com.example.android.forecast.sync.ForecastSyncAdapter;
  * the list of settings.
  *
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity implements
+        SharedPreferences.OnSharedPreferenceChangeListener{
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -97,6 +104,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     }
 
+
+    // Register a shared preference change listener that gets notified when prefs change
+    @Override
+    protected void onResume() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.registerOnSharedPreferenceChangeListener(this);
+        super.onResume();
+    }
+
+    // Unregister a shared preference change listener
+    @Override
+    protected void onPause() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.unregisterOnSharedPreferenceChangeListener(this);
+        super.onPause();
+    }
 
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.

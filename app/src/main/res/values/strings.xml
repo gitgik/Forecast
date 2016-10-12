@@ -107,4 +107,12 @@
     <string name="server_down">No Weather Forecast Info Available. The server seems to be down at the moment</string>
     <string name="server_error">No Weather Forecast Info Available. The server is not returning any data</string>
     <string name="invalid_location">Oops! You have entered an invalid location. Please enter a valid city name or postal code</string>
+
+
+    <string name="invalid_location_description">
+        Invalid Location (<xliff:g id="location_setting">%1$s</xliff:g>)
+    </string>
+    <string name="location_unknown_description">
+        Validating Location...(<xliff:g id="location_setting">%1$s</xliff:g>)
+    </string>
 </resources>
