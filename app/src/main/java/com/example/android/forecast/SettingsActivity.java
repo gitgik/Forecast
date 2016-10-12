@@ -97,10 +97,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Pre
                     break;
                 case ForecastSyncAdapter.LOCATION_STATUS_UNKNOWN:
                     preference.setSummary(
-                            getString(R.string.location_unknown_description, value));
+                            getString(R.string.location_unknown_description, value.toString()));
                     break;
                 case ForecastSyncAdapter.LOCATION_STATUS_INVALID:
-                    preference.setSummary(getString(R.string.invalid_location_description, value));
+                    preference.setSummary(getString(R.string.invalid_location_description, value.toString()));
                     break;
                 default:
                     preference.setSummary(stringValue);
