@@ -96,6 +96,29 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         getSyncAccount(context);
     }
 
+    /**
+     * Sets the location status into shared preferences. This function should be called from
+     * the UI thread because it commits to write to the Shared Preferences.
+      * @param context Context to get the PreferenceManager from
+     * @param locationStatus The IntDef value to set
+     */
+    static private void setLocationStatus(Context context, @LocationStatus int locationStatus) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(context.getString(R.string.pref_location_status_key), locationStatus);
+        spe.commit();
+    }
+
+
+
+    /**
+     * Performs a weather sync with the server to update the weather data
+     * @param account
+     * @param extras
+     * @param authority
+     * @param provider
+     * @param syncResult
+     */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
                               ContentProviderClient provider, SyncResult syncResult) {
@@ -108,8 +131,13 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
         try {
             getWeatherDataFromJson(weatherForecast, locationQuery);
+            // The location status is OK
+            setLocationStatus(getContext(), LOCATION_STATUS_OK);
         } catch (JSONException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
+            // The location status is server invalid
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         }
     }
 
@@ -375,7 +403,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         try {
             // Construct URL for the OpenWeatherMap API
             final String QUERY_PARAM = "q";
-            final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
+            final String FORECAST_URL = "http://google.com/";
             final String FORMAT = "mode";
             final String UNITS = "units";
             final String DAYS = "cnt";
@@ -418,6 +446,8 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
         } catch (IOException e) {
             Log.e(LOG_TAG, "NETWORK ERROR: ", e);
+            e.printStackTrace();
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
             return null;
         } finally {
             if (urlConnection != null) {
