@@ -485,8 +485,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 urlConnection.disconnect();
             }
             if (reader != null) {
-                try
-                {
+                try {
                     reader.close();
                 } catch (final IOException e) {
                     Log.e(LOG_TAG, "CLOSING STREAM", e);
