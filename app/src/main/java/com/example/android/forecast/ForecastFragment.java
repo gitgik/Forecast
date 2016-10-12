@@ -1,8 +1,10 @@
 package com.example.android.forecast;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -27,7 +29,8 @@ import java.util.Date;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ForecastFragment extends Fragment  implements LoaderManager.LoaderCallbacks<Cursor>{
+public class ForecastFragment extends Fragment  implements LoaderManager.LoaderCallbacks<Cursor>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     private String mLocation;
     private int mPosition;
@@ -65,6 +68,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     private ForecastAdapter forecastAdapter;
     private boolean mUseTodayLayout;
+
 
     /**
      * A callback interface that all activities containing this fragment
@@ -128,12 +132,23 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     @Override
     public void onResume() {
+        // Register the on shared preference listener
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sp.registerOnSharedPreferenceChangeListener(this);
         // Check if our location has changed to update the weather
         super.onResume();
         if (mLocation != null && !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             // restart our loader
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
         }
+    }
+
+    @Override
+    public void onPause() {
+        // Unregister the listener for shared preferences
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sp.unregisterOnSharedPreferenceChangeListener(this);
+        super.onPause();
     }
 
 
@@ -265,11 +280,28 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
             if (null != tv) {
                 // if cursor is empty
                 int message = R.string.empty_forecast;
-                if (!Utility.isNetworkAvailable(getActivity())) {
-                    message = R.string.no_internet;
+
+                @ForecastSyncAdapter.LocationStatus int location = Utility.getLocationStatus(getActivity());
+                switch (location) {
+                    case ForecastSyncAdapter.LOCATION_STATUS_SERVER_DOWN:
+                        message = R.string.server_down;
+                        break;
+                    case ForecastSyncAdapter.LOCATION_STATUS_SERVER_INVALID:
+                        message = R.string.server_error;
+                        break;
+                    default:
+                        // There is no internet connection
+                        if (!Utility.isNetworkAvailable(getActivity())) {
+                            message = R.string.no_internet;
+                        }
                 }
                 tv.setText(message);
             }
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
     }
  }

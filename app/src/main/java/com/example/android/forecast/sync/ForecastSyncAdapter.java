@@ -403,7 +403,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         try {
             // Construct URL for the OpenWeatherMap API
             final String QUERY_PARAM = "q";
-            final String FORECAST_URL = "http://google.com/";
+            final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
             final String FORMAT = "mode";
             final String UNITS = "units";
             final String DAYS = "cnt";
