@@ -302,6 +302,8 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
+        if (key.equals(getString(R.string.pref_location_status_key))) {
+            updateEmptyView();
+        }
     }
  }
