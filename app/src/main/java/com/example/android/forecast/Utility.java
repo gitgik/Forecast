@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.support.v4.widget.SimpleCursorAdapter;
 
 import com.example.android.forecast.data.ForecastContract;
+import com.example.android.forecast.sync.ForecastSyncAdapter;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -248,5 +248,19 @@ public class Utility {
         boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
         return isConnected;
+    }
+
+
+    /**
+     *
+     * @param c Context used to get the SharedPreferences
+     * @return the location status integer type
+     */
+    @SuppressWarnings("ResourceType")
+    public static @ForecastSyncAdapter.LocationStatus
+    int getLocationStatus(Context c) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        return sp.getInt(c.getString(R.string.pref_location_status_key),
+                ForecastSyncAdapter.LOCATION_STATUS_UNKNOWN);
     }
 }
