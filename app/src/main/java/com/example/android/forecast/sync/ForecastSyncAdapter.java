@@ -2,6 +2,7 @@ package com.example.android.forecast.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
@@ -14,16 +15,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.format.Time;
 import android.preference.PreferenceManager;
 import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.text.format.Time;
 import android.util.Log;
 
 import com.example.android.forecast.MainActivity;
@@ -247,11 +249,28 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     String description = cursor.getString(INDEX_SHORT_DESC);
 
                     int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
-                    String title = context.getString(R.string.app_name);
+                    Resources resources = context.getResources();
+                    int artResourceId = Utility.getArtResourceForWeatherCondition(weatherId);
+                    String artUrl = Utility.getArtUrlForWeatherCondition(context, weatherId);
+
+                    @SuppressLint("InlinedApi")
+                    int largeIconWidth = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                            ? resources.getDimensionPixelSize(
+                            android.R.dimen.notification_large_icon_width):
+                            resources.getDimensionPixelSize(R.dimen.notification_large_icon_default
+                            );
+
+                    @SuppressLint("InlinedApi")
+                    int largeIconHeight = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                            ? resources.getDimensionPixelSize(
+                            android.R.dimen.notification_large_icon_height):
+                            resources.getDimensionPixelSize(R.dimen.notification_large_icon_default
+                            );
+
+
 
                     // Define the text of the forecast.
                     String highFormat = Utility.formatTemperature(context, high, Utility.isMetric(context));
-                    String lowFormat = Utility.formatTemperature(context, low, Utility.isMetric(context));
                     String contextHeader = String.format(
                             context.getString(R.string.format_notification),
                             highFormat, locationQuery);
