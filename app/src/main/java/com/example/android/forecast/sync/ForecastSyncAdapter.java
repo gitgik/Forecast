@@ -300,6 +300,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     // Build our notification using the NotificationCompat.builder
                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                                     .setSmallIcon(iconId)
+                                    .setLargeIcon(largeIcon)
                                     .setContentTitle(contextHeader)
                                     .setContentText(description);
 
