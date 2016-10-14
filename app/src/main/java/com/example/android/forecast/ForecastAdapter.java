@@ -2,12 +2,15 @@ package com.example.android.forecast;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 /**
  * Created by nerd on 29/09/2016.
@@ -18,7 +21,10 @@ public class ForecastAdapter extends CursorAdapter {
 
     private final int VIEW_TYPE_TODAY = 0;
     private final int VIEW_TYPE_FUTURE_DAY = 1;
-    private boolean mUseTodayLayout;
+    // Flag to determine if we want to use a separate view for "today"
+    private boolean mUseTodayLayout = true;
+
+    private Cursor mCursor;
 
     public ForecastAdapter (Context context, Cursor c, int flags) {
         super(context, c, flags);
@@ -76,24 +82,35 @@ public class ForecastAdapter extends CursorAdapter {
 
         // Read weather icon ID from cursor
         int weatherId;
+        int defaultImage;
         // Use image that corresponds to the weather code from the API.
         int viewType= getItemViewType(cursor.getPosition());
         switch (viewType) {
             case VIEW_TYPE_TODAY: {
                 // Get weather icon
                 weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
-                viewHolder.iconView.setImageResource(
-                        Utility.getArtResourceForWeatherCondition(weatherId));
+                defaultImage = Utility.getArtResourceForWeatherCondition(weatherId);
+                Glide.with(context)
+                        .load(Utility.getArtUrlForWeatherCondition(context, weatherId))
+                        .error(defaultImage)
+                        .crossFade()
+                        .into(viewHolder.iconView);
                 break;
             }
-            case VIEW_TYPE_FUTURE_DAY: {
+            default: {
                 // get weather icon
                 weatherId = cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
-                viewHolder.iconView.setImageResource(
-                        Utility.getIconResourceForWeatherCondition(weatherId));
+                defaultImage = Utility.getIconResourceForWeatherCondition(weatherId);
+                Glide.with(context)
+                        .load(Utility.getArtUrlForWeatherCondition(context, weatherId))
+                        .error(defaultImage)
+                        .crossFade()
+                        .into(viewHolder.iconView);
                 break;
             }
         }
+
+
 
         // Read date from cursor
         String dateString = cursor.getString(ForecastFragment.COL_WEATHER_DATE);
@@ -119,7 +136,7 @@ public class ForecastAdapter extends CursorAdapter {
     /**
      * Cache the child views for a forecast list item
      */
-    public static class ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final ImageView iconView;
         public final TextView dateView;
         public final TextView descriptionView;
@@ -127,11 +144,19 @@ public class ForecastAdapter extends CursorAdapter {
         public final TextView lowView;
 
         public ViewHolder(View view) {
+            super(view);
             iconView = (ImageView) view.findViewById(R.id.list_item_icon);
             dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
             descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
             highView = (TextView) view.findViewById(R.id.list_item_high_textview);
             lowView = (TextView) view.findViewById(R.id.list_item_low_textview);
         }
+
+        @Override
+        public void onClick(View v) {
+
+        }
+
+
     }
 }
