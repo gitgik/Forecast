@@ -18,6 +18,8 @@ import android.content.SyncResult;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +30,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.text.format.Time;
 import android.util.Log;
 
+import com.bumptech.glide.Glide;
 import com.example.android.forecast.MainActivity;
 import com.example.android.forecast.R;
 import com.example.android.forecast.Utility;
@@ -49,6 +52,7 @@ import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by nerd on 05/10/2016.
@@ -253,19 +257,37 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     int artResourceId = Utility.getArtResourceForWeatherCondition(weatherId);
                     String artUrl = Utility.getArtUrlForWeatherCondition(context, weatherId);
 
+                    // On  Gingerbread and lower devices, the icon width is 48dp
                     @SuppressLint("InlinedApi")
                     int largeIconWidth = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
                             ? resources.getDimensionPixelSize(
                             android.R.dimen.notification_large_icon_width):
                             resources.getDimensionPixelSize(R.dimen.notification_large_icon_default
                             );
-
+                    // On  Gingerbread and lower devices, the icon height is 48dp
                     @SuppressLint("InlinedApi")
                     int largeIconHeight = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
                             ? resources.getDimensionPixelSize(
                             android.R.dimen.notification_large_icon_height):
                             resources.getDimensionPixelSize(R.dimen.notification_large_icon_default
                             );
+
+                    Bitmap largeIcon;
+                    try {
+                        largeIcon = Glide.with(context)
+                                .load(artUrl)
+                                .asBitmap() // Load as a bitmap
+                                .error(artResourceId)
+                                .fitCenter()
+                                .into(largeIconWidth, largeIconHeight) // fixed size
+                                .get();
+
+                                BitmapFactory.decodeResource(resources, artResourceId);
+                    } catch (InterruptedException | ExecutionException e) {
+                        Log.e(LOG_TAG, "ERROR RETRIEVING LARGE ICON FROM " + artUrl, e);
+                        largeIcon = BitmapFactory.decodeResource(resources, artResourceId);
+                    }
+
 
 
 
