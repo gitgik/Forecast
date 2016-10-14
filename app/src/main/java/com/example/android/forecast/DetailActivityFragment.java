@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.android.forecast.data.ForecastContract;
 
 /**
@@ -223,8 +224,11 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
         int weatherId = data.getInt(data.getColumnIndex(
                 ForecastContract.WeatherEntry.COLUMN_WEATHER_ID
         ));
-
-        iconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
+        // iconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
+        // Use glide to set images
+        Glide.with(this).load(Utility.getArtUrlForWeatherCondition(getActivity(), weatherId))
+                .error(Utility.getArtResourceForWeatherCondition(weatherId))
+                .into(iconView);
 
         String date = data.getString(data.getColumnIndex(
                 ForecastContract.WeatherEntry.COLUMN_DATETEXT
