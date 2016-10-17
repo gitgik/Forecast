@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(true);
         getSupportActionBar().setIcon(R.mipmap.ic_launcher);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
 
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
         ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
