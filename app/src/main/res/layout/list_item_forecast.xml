@@ -27,14 +27,16 @@
             android:layout_height="wrap_content"
             android:id="@+id/list_item_date_textview"
             android:textColor="@drawable/touch_text"
-            android:textSize="22sp"/>
+            android:textSize="22sp"
+            android:elevation="5dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/list_item_forecast_textview"
             android:textColor="@drawable/touch_text"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:elevation="5dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -51,6 +53,7 @@
             android:id="@+id/list_item_high_textview"
             android:textColor="@drawable/touch_text"
             android:textSize="22sp"
+            android:elevation="5dp"
             />
 
 
@@ -60,6 +63,7 @@
             android:id="@+id/list_item_low_textview"
             android:textColor="@drawable/touch_text"
             android:textSize="14sp"
+            android:elevation="5dp"
             />
     </LinearLayout>
 
