@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.ic_launcher);
 
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
         ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
