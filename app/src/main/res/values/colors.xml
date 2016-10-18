@@ -11,4 +11,7 @@
     <!-- our detail accent colors -->
     <color name="detailAccentPaneBackground">#455A64</color>
     <color name="detailAccentLabel">#90A4AE</color>
+
+    <!-- the color used for the low temperature in the forecast list -->
+    <color name="forecastLowText">#607D8B</color>
 </resources>

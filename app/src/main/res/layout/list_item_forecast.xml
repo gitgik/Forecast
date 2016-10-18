@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/touch_selector">
+    android:orientation="horizontal"
+    android:background="@drawable/touch_selector"
+    android:paddingLeft="@dimen/abc_action_bar_content_inset_material"
+    android:paddingRight="@dimen/abc_action_bar_content_inset_material">
 
     <ImageView
         android:id="@+id/list_item_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/list_icon"
+        android:layout_height="@dimen/list_icon"
+        android:layout_gravity="center"
         android:paddingLeft="5dp"
-        android:src="@drawable/ic_clear"
+        android:layout_marginRight="@dimen/abc_action_bar_content_inset_material"
+        android:layout_marginEnd="@dimen/abc_action_bar_content_inset_material"
         android:adjustViewBounds="true"/>
 
 
@@ -34,37 +39,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/list_item_forecast_textview"
-            android:textColor="@drawable/touch_text"
-            android:textSize="14sp"
-            android:elevation="5dp"/>
+            android:textColor="@color/secondaryText"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/list_item_high_textview"
+        android:layout_width="@dimen/forecast_text_width"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingRight="16dp"
-        android:layout_weight="3"
-        >
+        android:layout_gravity="center"
+        android:gravity="right"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginRight="@dimen/forecast_temperature_space"
+        android:layout_marginEnd="@dimen/forecast_temperature_space"
+        android:textColor="@color/primaryText"
+        android:textSize="@dimen/forecast_text_size"
+        />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/list_item_high_textview"
-            android:textColor="@drawable/touch_text"
-            android:textSize="22sp"
-            android:elevation="5dp"
-            />
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/list_item_low_textview"
-            android:textColor="@drawable/touch_text"
-            android:textSize="14sp"
-            android:elevation="5dp"
-            />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/list_item_low_textview"
+        android:layout_width="@dimen/forecast_text_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="right"
+        android:fontFamily="sans-serif-light"
+        android:textColor="@color/forecastLowText"
+        android:textSize="@dimen/forecast_text_size"
+        />
 
 </LinearLayout>
