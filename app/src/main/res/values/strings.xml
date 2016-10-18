@@ -123,4 +123,10 @@
     <string name="location_unknown_description">
         Validating Location...(<xliff:g id="location_setting">%1$s</xliff:g>)
     </string>
+
+
+    <!-- Humidity, wind and pressure titles -->
+    <string name="humidity">Humidity</string>
+    <string name="pressure">Pressure</string>
+    <string name="wind">Wind</string>
 </resources>
