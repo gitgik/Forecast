@@ -5,4 +5,10 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FFD740</color>
     <color name="colorGrey">#e5e2e3</color>
+    <color name="secondaryText">#727272</color>
+    <color name="primaryText">#212121</color>
+
+    <!-- our detail accent colors -->
+    <color name="detailAccentPaneBackground">#455A64</color>
+    <color name="detailAccentLabel">#90A4AE</color>
 </resources>
