@@ -25,8 +25,6 @@ import com.example.android.forecast.data.ForecastContract.LocationEntry;
 import com.example.android.forecast.data.ForecastContract.WeatherEntry;
 import com.example.android.forecast.sync.ForecastSyncAdapter;
 
-import java.util.Date;
-
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -69,6 +67,9 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public static final int COL_WEATHER_CONDITION_ID = 5;
     public static final int COL_LOCATION_SETTING = 6;
 
+
+
+
     /**
      * A callback interface that all activities containing this fragment
      * must implement. This mechanism allows activities to be notified
@@ -78,7 +79,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         /**
          * Callback for when an item is selected
          */
-        public void onItemSelected(String date);
+        public void onItemSelected(Uri dateUri, ForecastAdapter.ViewHolder viewHolder);
     }
 
     public ForecastFragment () {
@@ -155,19 +156,31 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
             mPosition = savedInstanceState.getInt(POSITION_KEY);
         }
 
-        // Unlike simple cursor adapter: No need to define db columns it should be mapping
-        // The simple cursor adapter takes raw data and populates the RecyclerView it is attached to.
-        mForecastAdapter = new ForecastAdapter(getActivity());
-
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
-        // Get a reference to list view and attach the adapter to it.
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_forecast);
+
         // Set the layout manager
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
         View emptyView = rootView.findViewById(R.id.recyclerview_forecast_empty);
 
+        // Unlike simple cursor adapter: No need to define db columns it should be mapping
+        // The simple cursor adapter takes raw data and populates the RecyclerView it is attached to.
+        mForecastAdapter = new ForecastAdapter(getActivity(), new ForecastAdapter.ForecastAdapterOnClickHandler() {
+
+            @Override
+            public void onClick(Long date, ForecastAdapter.ViewHolder viewHolder) {
+                String location = Utility.getPreferredLocation(getActivity());
+                ((Callback) getActivity()).onItemSelected(
+                        ForecastContract.WeatherEntry.buildWeatherLocationWithDate(location, date), viewHolder);
+            }
+        }, emptyView);
+
+
+        // Get a reference to list view and attach the adapter to it.
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_forecast);
+
         // Improve performance if the changes in content do not change the layout size of RecyclerView
-//        mRecyclerView.setHasFixedSize(true);
+        // mRecyclerView.setHasFixedSize(true);
 
 //        listView.setEmptyView(emptyView);
 
@@ -225,13 +238,13 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         // This is called when a new loader needs to be created.
 
         // Get current date
-        String startDate = ForecastContract.getDbDateString(new Date());
+        Long currentDate = System.currentTimeMillis();
 
         // Sort order: Ascending, by date.
         String sortOrder = WeatherEntry.COLUMN_DATETEXT + " ASC";
         mLocation = Utility.getPreferredLocation(getActivity());
 
-        Uri weatherLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(mLocation, startDate);
+        Uri weatherLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(mLocation, currentDate);
 
         Log.v("*** Forecast Fragment: ", "URI: " + weatherLocationUri.toString());
 
