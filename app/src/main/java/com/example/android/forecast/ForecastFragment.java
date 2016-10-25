@@ -262,7 +262,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         // Use the data from the cursor that the loader just loaded.
         forecastAdapter.swapCursor(data);
 
-        if (!mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
+        if (!mLocation.equals(Utility.getPreferredLocation(getContext()))) {
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
         }
         updateEmptyView();

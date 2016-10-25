@@ -1,79 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
-    android:background="@color/colorPrimary"
-    android:minHeight="?android:attr/listPreferredItemHeight">
+    android:background="@drawable/touch_selector"
+    android:elevation="4dp"
+    android:translationZ="4dp">
 
-    <LinearLayout
-        android:layout_height="wrap_content"
-        android:layout_width="0dp"
-        android:layout_weight="7"
-        android:orientation="vertical"
-        android:paddingLeft="60dp"
-        android:gravity="center_vertical">
+    <android.support.v7.widget.GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:columnCount="2">
 
         <TextView
             android:id="@+id/list_item_date_textview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-condensed"
-            android:text="Today"
-            android:textColor="@android:color/white"
-            />
+            android:layout_marginTop="@dimen/abc_action_bar_content_inset_material"
+            android:layout_marginBottom="@dimen/abc_action_bar_content_inset_material"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:fontFamily="sans-serif"
+            android:gravity="center_horizontal"
+            app:layout_columnSpan="2"
+            app:layout_columnWeight="1"
+            app:layout_gravity="fill_horizontal"
+            android:textColor="@color/secondaryText"
+            tools:text="Today, April 15" />
+
+        <ImageView
+            android:id="@+id/list_item_icon"
+            android:layout_width="0dp"
+            android:maxHeight="@dimen/today_icon"
+            android:maxWidth="@dimen/today_icon"
+            android:adjustViewBounds="true"
+            app:layout_columnWeight="1"
+            app:layout_gravity="fill_horizontal"
+            tools:src="@drawable/art_clear"/>
 
         <TextView
             android:id="@+id/list_item_high_textview"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="72sp"
             android:fontFamily="sans-serif-light"
-            android:text="22"
-            android:textColor="@android:color/white"
+            android:textColor="@color/primaryText"
+            android:gravity="center_horizontal"
+            app:layout_gravity="fill_horizontal"
+            app:layout_columnWeight="1"
+            tools:text="19" />
+
+        <TextView
+            android:id="@+id/list_item_forecast_textview"
+            android:layout_width="0dp"
+            android:fontFamily="sans-serif"
+            android:textSize="22sp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:textColor="@color/secondaryText"
+            android:gravity="center_horizontal"
+            app:layout_columnWeight="1"
+            tools:text="Clear"
             />
 
         <TextView
             android:id="@+id/list_item_low_textview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_marginBottom="@dimen/abc_action_bar_content_inset_material"
             android:textSize="36sp"
             android:fontFamily="sans-serif-light"
             android:text="12"
-            android:textColor="@android:color/white"
+            android:gravity="center_horizontal"
+            android:textColor="@color/secondaryText"
+            app:layout_columnWeight="1"
+            tools:text="10"
             />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_height="wrap_content"
-        android:layout_width="0dp"
-        android:layout_weight="5"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingRight="16dp">
-
-        <ImageView
-            android:id="@+id/list_item_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"/>
-
-        <TextView
-            android:id="@+id/list_item_forecast_textview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-condensed"
-            android:text="Clear"
-            android:textColor="@android:color/white"
-            />
-
-    </LinearLayout>
-</LinearLayout>
+    </android.support.v7.widget.GridLayout>
+</FrameLayout>

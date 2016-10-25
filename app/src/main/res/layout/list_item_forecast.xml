@@ -32,8 +32,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/list_item_date_textview"
             android:textColor="@drawable/touch_text"
-            android:textSize="22sp"
-            android:elevation="5dp"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
 
         <TextView
             android:layout_width="wrap_content"

@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.example.android.forecast.MainActivity">
+    tools:context="com.example.android.forecast.MainActivity"
+    android:clipChildren="false">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -21,7 +22,6 @@
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:contentInsetStart="5dp"
             app:contentInsetLeft="0dp"
-            android:layout_marginTop="?attr/actionBarSize"
             />
 
     </android.support.design.widget.AppBarLayout>

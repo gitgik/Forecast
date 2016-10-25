@@ -16,20 +16,24 @@ import com.example.android.forecast.sync.ForecastSyncAdapter;
 public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final String DETAILACTIVITYFRAGMENT_TAG = "DFTAG";
     private boolean mTwoPane;
+    private String mLocation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mLocation = Utility.getPreferredLocation(this);
+        Uri contentUri = getIntent() != null ? getIntent().getData() : null;
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(true);
         getSupportActionBar().setIcon(R.mipmap.ic_launcher);
         getSupportActionBar().setDisplayUseLogoEnabled(true);
 
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
-        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.fragment));
+//        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
 
         if (findViewById(R.id.weather_detail_container) != null) {
             // The detail container view will be present only in the large
@@ -37,24 +41,30 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
             // If this view is present, then the activity will be in two-pane mode
             mTwoPane = true;
 
-            // Do not use today layout in tablets
-            forecastFragment.setUseTodayLayout(false);
 
-            // In two-pane mode, show the detail view in this activity by
-            // adding a detail fragment using a fragment transaction
-
-            Bundle arguments = new Bundle();
-            DetailActivityFragment fragment = new DetailActivityFragment();
-            fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.weather_detail_container, fragment)
-                    .commit();
+            if (savedInstanceState == null) {
+                DetailActivityFragment fragment = new DetailActivityFragment();
+                if (contentUri != null ) {
+                    Bundle args = new Bundle();
+                    // In two-pane mode, show the detail view in this activity by
+                    // adding a detail fragment using a fragment transaction
+                    args.putParcelable("URI", contentUri);
+                    fragment.setArguments(args);
+                }
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.weather_detail_container, fragment, DETAILACTIVITYFRAGMENT_TAG)
+                        .commit();
+            }
 
         } else {
             mTwoPane = false;
+            getSupportActionBar().setElevation(0f);
         }
 
-        forecastFragment.setUseTodayLayout(true);
+        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment));
+        forecastFragment.setUseTodayLayout(!mTwoPane);
+
         // Make sure we have an account created to allow sync
         ForecastSyncAdapter.initializeSyncAdapter(this);
     }
