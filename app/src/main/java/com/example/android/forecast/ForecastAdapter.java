@@ -43,6 +43,11 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 
 
     }
+
+    public static interface ForecastAdapterOnClickHandler {
+        void onClick(Long date, ViewHolder viewHolder);
+    }
+
     public final String TAG = ForecastAdapter.class.getSimpleName();
 
     private final int VIEW_TYPE_TODAY = 0;
@@ -52,9 +57,13 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 
     private Cursor mCursor;
     private final Context mContext;
+    private ForecastAdapterOnClickHandler mClickHandler;
+    private final View mEmptyView;
 
-    public ForecastAdapter (Context context) {
+    public ForecastAdapter (Context context, ForecastAdapterOnClickHandler clickHandler, View emptyView) {
         mContext = context;
+        mClickHandler = clickHandler;
+        mEmptyView = emptyView;
     }
 
 
@@ -152,7 +161,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
         notifyDataSetChanged();
     }
 
-    public Cursor getCursor() { return mCursor; }
+//    public Cursor getCursor() { return mCursor; }
 
 //    @Override
 //    public int getViewTypeCount() {
