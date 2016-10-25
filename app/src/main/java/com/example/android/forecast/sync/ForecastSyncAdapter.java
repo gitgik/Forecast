@@ -430,9 +430,16 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 // The date/time is returned as a long.  We need to convert that
                 // into something human-readable, since most people won't read "1400356800" as
                 // "this saturday".
-                // dateTime = dayForecast.getLong(OWM_DATETIME);
-                // CONVERT THIS TO UTO TIME
-                dateTime = dayTime.setJulianDay(julianStartDay+i);
+                dateTime = dayForecast.getLong(OWM_DATETIME);
+                // CONVERT THIS TO UTC TIME
+                // dateTime = dayTime.setJulianDay(julianStartDay+i);
+
+//                GregorianCalendar gc = new GregorianCalendar();
+//                gc.add(GregorianCalendar.DATE, i);
+//
+//                Date time = gc.getTime();
+//                SimpleDateFormat shortDateFormat = new SimpleDateFormat("EEE MMM dd");
+//                String day = shortDateFormat.format(time);
 
 
                 pressure = dayForecast.getDouble(OWM_PRESSURE);
