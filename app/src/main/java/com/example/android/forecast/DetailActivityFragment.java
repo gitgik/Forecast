@@ -234,7 +234,7 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                 ForecastContract.WeatherEntry.COLUMN_DATETEXT
         ));
         String friendlyDateText = Utility.getDayName(getActivity(), date);
-        String dateText = Utility.getFormattedMonthDay(getActivity(), date);
+//        String dateText = Utility.getFormattedMonthDay(getActivity(), date);
         dateView.setText(friendlyDateText);
 
         boolean isMetric =  Utility.isMetric(getActivity());
