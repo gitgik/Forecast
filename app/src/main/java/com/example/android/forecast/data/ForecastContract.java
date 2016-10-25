@@ -3,6 +3,7 @@ package com.example.android.forecast.data;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.text.format.Time;
 import android.util.Log;
 
 import java.text.ParseException;
@@ -22,6 +23,16 @@ public class ForecastContract {
     public static final String WEATHER_PATH = "weather";
     public static final String LOCATION_PATH = "location";
 
+
+    // To make it easy to query for the exact date, we normalize all dates that go into
+    // the database to the start of the the Julian day at UTC.
+    public static long normalizeDate(long startDate) {
+        // normalize the start date to the beginning of the (UTC) day
+        Time time = new Time();
+        time.set(startDate);
+        int julianDay = Time.getJulianDay(startDate, time.gmtoff);
+        return time.setJulianDay(julianDay);
+    }
 
     /**
      * Inner class that defines the table contents of forecast table
@@ -77,12 +88,14 @@ public class ForecastContract {
             return CONTENT_URI.buildUpon().appendPath(locationSetting).build();
         }
 
-        public static Uri buildWeatherLocationWithStartDate (String locationSetting, String startDate) {
-             return CONTENT_URI.buildUpon().appendPath(locationSetting).appendQueryParameter(COLUMN_DATETEXT, startDate).build();
+        public static Uri buildWeatherLocationWithStartDate (String locationSetting, long startDate) {
+             return CONTENT_URI.buildUpon().appendPath(locationSetting).appendQueryParameter(
+                     COLUMN_DATETEXT, Long.toString(normalizeDate(startDate))).build();
         }
 
-        public static Uri buildWeatherLocationWithDate (String locationSetting, String date) {
-            return CONTENT_URI.buildUpon().appendPath(locationSetting).appendPath(date).build();
+        public static Uri buildWeatherLocationWithDate (String locationSetting, long date) {
+            return CONTENT_URI.buildUpon().appendPath(locationSetting).appendPath(
+                    Long.toString(normalizeDate(date))).build();
         }
 
         public static String getLocationSettingFromUri (Uri uri) {
