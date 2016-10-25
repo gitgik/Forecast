@@ -6,8 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/touch_selector"
-    android:elevation="4dp"
-    android:translationZ="4dp">
+    android:elevation="@dimen/appbar_elevation">
 
     <android.support.v7.widget.GridLayout
         android:layout_width="match_parent"
