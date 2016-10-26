@@ -6,10 +6,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.support.v4.util.Pair;
 
 import com.example.android.forecast.sync.ForecastSyncAdapter;
 
@@ -117,20 +121,27 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
     }
 
     @Override
-    public void onItemSelected(String date) {
+    public void onItemSelected(Uri contentUri, ForecastAdapter.ViewHolder vh) {
         if (mTwoPane) {
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a fragment
             // transaction
+            Bundle args = new Bundle();
+            args.putParcelable("URI", contentUri);
+
+            DetailActivityFragment fragment = new DetailActivityFragment();
+            fragment.setArguments(args);
 
             getSupportFragmentManager().beginTransaction().replace(
-                    R.id.weather_detail_container,
-                    DetailActivityFragment.newInstance(date)).commit();
+                    R.id.weather_detail_container, fragment).commit();
 
         } else {
-            Intent intent = new Intent(this, DetailActivity.class);
-            intent.putExtra(DetailActivity.DATE_KEY, date);
-            startActivity(intent);
+            Intent intent = new Intent(this, DetailActivity.class).setData(contentUri);
+            ActivityOptionsCompat activityOptions =
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(this,
+                            new Pair<View, String>(
+                                    vh.iconView, getString(R.string.detail_icon_transition_name)));
+            ActivityCompat.startActivity(this, intent, activityOptions.toBundle());
         }
     }
 }

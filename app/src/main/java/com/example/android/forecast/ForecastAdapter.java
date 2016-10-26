@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.android.forecast.data.ForecastContract;
 
 /**
  * Created by nerd on 29/09/2016.
@@ -34,11 +35,15 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
             descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
             highView = (TextView) view.findViewById(R.id.list_item_high_textview);
             lowView = (TextView) view.findViewById(R.id.list_item_low_textview);
+            view.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-
+            int adapterPosition = getAdapterPosition();
+            mCursor.moveToPosition(adapterPosition);
+            int dateColumnIndex = mCursor.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DATETEXT);
+            mClickHandler.onClick(mCursor.getLong(dateColumnIndex), this);
         }
 
 
@@ -146,8 +151,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
     }
 
     @Override
-    public int getItemViewType(int positon) {
-        return (positon == 0 && mUseTodayLayout) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
+    public int getItemViewType(int position) {
+        return (position == 0 && mUseTodayLayout) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
     }
 
     @Override
@@ -159,6 +164,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
     public void swapCursor(Cursor newCursor) {
         mCursor = newCursor;
         notifyDataSetChanged();
+        // Set visibility of empty view depending on item count
+        mEmptyView.setVisibility(getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
 //    public Cursor getCursor() { return mCursor; }

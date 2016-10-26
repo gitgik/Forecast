@@ -36,6 +36,7 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
 
     private static final String FORECAST_SHARE_HASHTAG = "ForecastApp";
     private String forecastString;
+    private Uri mUri;
 
     private String mLocation;
     private static final String[] FORECAST_COLUMNS = {
@@ -187,29 +188,35 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
         return super.onOptionsItemSelected(item);
     }
 
+    void onLocationChanged( String newLocation ) {
+        // replace the uri, since the location has changed
+        Uri uri = mUri;
+        if (null != uri) {
+            long date = ForecastContract.WeatherEntry.getDateFromUri(uri);
+            Uri updatedUri = ForecastContract.WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
+            mUri = updatedUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        }
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // String forecastDate = getActivity().getIntent().getStringExtra(DATE_KEY);
-
-        String dateString = getArguments().getString(DetailActivity.DATE_KEY);
-
-        mLocation = Utility.getPreferredLocation(getActivity());
-        // Sort order: Ascending by date
-        String sortOrder = ForecastContract.WeatherEntry.COLUMN_DATETEXT + " ASC";
-
-        Uri weatherUri = ForecastContract.WeatherEntry.buildWeatherLocationWithDate(mLocation, dateString);
-
-        // Create and return a cursor loader that will take care
-        // of creating a cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                weatherUri,
-                FORECAST_COLUMNS,
-                null,
-                null,
-                sortOrder
-        );
+        if (null != mUri) {
+            // Create and return a cursor loader that will take care
+            // of creating a cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    FORECAST_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
+
+
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {

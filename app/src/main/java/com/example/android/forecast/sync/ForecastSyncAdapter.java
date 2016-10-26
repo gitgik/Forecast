@@ -236,7 +236,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                 String locationQuery = Utility.getPreferredLocation(context);
 
                 Uri weatherUri = WeatherEntry.buildWeatherLocationWithDate(
-                        locationQuery, ForecastContract.getDbDateString(new Date()));
+                        locationQuery, System.currentTimeMillis());
 
                 // Query using a cursor
                 Cursor cursor = context.getContentResolver().query(

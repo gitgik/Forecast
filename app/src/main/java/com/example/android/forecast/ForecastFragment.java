@@ -158,40 +158,34 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
 
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
 
+        // Get a reference to the RecyclerView, and attach this adapter to it.
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_forecast);
+
         // Set the layout manager
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
         View emptyView = rootView.findViewById(R.id.recyclerview_forecast_empty);
+        // Improve performance if the changes in content do not change the layout size of RecyclerView
+        mRecyclerView.setHasFixedSize(true);
 
         // Unlike simple cursor adapter: No need to define db columns it should be mapping
         // The simple cursor adapter takes raw data and populates the RecyclerView it is attached to.
-        mForecastAdapter = new ForecastAdapter(getActivity(), new ForecastAdapter.ForecastAdapterOnClickHandler() {
+        mForecastAdapter = new ForecastAdapter(getActivity(),
+                new ForecastAdapter.ForecastAdapterOnClickHandler() {
 
             @Override
             public void onClick(Long date, ForecastAdapter.ViewHolder viewHolder) {
                 String location = Utility.getPreferredLocation(getActivity());
                 ((Callback) getActivity()).onItemSelected(
                         ForecastContract.WeatherEntry.buildWeatherLocationWithDate(location, date), viewHolder);
+                mPosition = viewHolder.getAdapterPosition();
             }
         }, emptyView);
-
-
-        // Get a reference to list view and attach the adapter to it.
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_forecast);
-
-        // Improve performance if the changes in content do not change the layout size of RecyclerView
-        // mRecyclerView.setHasFixedSize(true);
 
 //        listView.setEmptyView(emptyView);
 
 //        mForecastAdapter = new ForecastAdapter(getActivity(), new ForecastAdapter.ForecastAdapterOnClickHandler())
         mRecyclerView.setAdapter(mForecastAdapter);
 
-
-        // Activity on create might call before onCreateView
-        // when the adapter is null
-        // Therefore, we use mUserTodayLayout value to the adapter here too
-        mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
 
         // Listen for clicks on the item
 //        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -212,6 +206,11 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         if (savedInstanceState != null && savedInstanceState.containsKey(POSITION_KEY)) {
             mPosition = savedInstanceState.getInt(POSITION_KEY);
         }
+
+        // Activity on create might call before onCreateView
+        // when the adapter is null
+        // Therefore, we use mUserTodayLayout value to the adapter here too
+        mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
 
         return rootView;
     }
