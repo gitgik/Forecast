@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.android.forecast.data.ForecastContract;
 import com.example.android.forecast.sync.ForecastSyncAdapter;
 
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -80,91 +81,135 @@ public class Utility {
         return String.format(context.getString(windFormat), windSpeed, direction);
     }
 
-    static String formatDate(String dateString) {
-        Date date = ForecastContract.getDateFromDb(dateString);
+    static String formatDate(long dateInMillis) {
+//        Date date = ForecastContract.getDateFromDb(dateString);
+        Date date = new Date(dateInMillis);
         return DateFormat.getDateInstance().format(date);
     }
 
-    static String getFormattedMonthDay(Context context, String dateString) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(ForecastContract.DATE_FORMAT);
-        try {
-            Date inputDate = dateFormat.parse(dateString);
-            SimpleDateFormat monthDayFormat = new SimpleDateFormat("MMMM dd");
-            String monthDayString = monthDayFormat.format(inputDate);
-            return monthDayString;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return null;
-        }
+    static String getFormattedMonthDay(Context context, long dateInMillis) {
+        android.text.format.Time time = new android.text.format.Time();
+        time.setToNow();
+//        SimpleDateFormat dateFormat = new SimpleDateFormat(ForecastContract.DATE_FORMAT);
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM dd");
+        String monthDayString = monthFormat.format(dateInMillis);
+        return  monthDayString;
+//        try {
+//            Date inputDate = dateFormat.parse(dateString);
+//            SimpleDateFormat monthDayFormat = new SimpleDateFormat("MMMM dd");
+//            String monthDayString = monthDayFormat.format(inputDate);
+//            return monthDayString;
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
     }
 
-    public static String getFriendlyDayString (Context context, String dateString) {
+    public static String getFriendlyDayString (Context context, long dateInMillis, boolean displayLongToday) {
         // For today: "Today, September 29
         // For tomorrow: "Tomorrow", ...etc
-        Date todayDate = new Date();
-        String todayString = ForecastContract.getDbDateString(todayDate);
-        Date inputDate = ForecastContract.getDateFromDb(dateString);
+        android.text.format.Time time = new android.text.format.Time();
+        time.setToNow();
 
-        if (todayString.equals(dateString)) {
+        long currentTime = System.currentTimeMillis();
+        int julianDay = android.text.format.Time.getJulianDay(dateInMillis, time.gmtoff);
+        int currentJulianDay = android.text.format.Time.getJulianDay(currentTime, time.gmtoff);
+
+        if (displayLongToday && julianDay == currentJulianDay) {
             String today = context.getString(R.string.today);
             int formatId = R.string.format_full_friendly_date;
-
-            return String.format(
-                    context.getString(
-                            formatId, today, getFormattedMonthDay(context, dateString)));
+            return String.format(context.getString(
+                    formatId, today, getFormattedMonthDay(context, dateInMillis)));
+        } else if (julianDay < currentJulianDay + 7) {
+            // If less than a week in the future, just return the day name
+            return getDayName(context, dateInMillis);
         } else {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(todayDate);
-            cal.add(Calendar.DATE, 7);
-            String weekFutureString = ForecastContract.getDbDateString(cal.getTime());
-
-            if (dateString.compareTo(weekFutureString) <  0) {
-                return getDayName(context, dateString);
-            } else {
-                SimpleDateFormat shortenedDayFormat = new SimpleDateFormat("EEE MMM dd");
-                return  shortenedDayFormat.format(inputDate);
-            }
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE MM dd");
+            return dateFormat.format(dateInMillis);
         }
+
+//        Date todayDate = new Date();
+//        String todayString = ForecastContract.getDbDateString(todayDate);
+//        Date inputDate = ForecastContract.getDateFromDb(dateString);
+//
+//        if (todayString.equals(dateString)) {
+//            String today = context.getString(R.string.today);
+//            int formatId = R.string.format_full_friendly_date;
+//
+//            return String.format(
+//                    context.getString(
+//                            formatId, today, getFormattedMonthDay(context, dateString)));
+//        } else {
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(todayDate);
+//            cal.add(Calendar.DATE, 7);
+//            String weekFutureString = ForecastContract.getDbDateString(cal.getTime());
+//
+//            if (dateString.compareTo(weekFutureString) <  0) {
+//                return getDayName(context, dateString);
+//            } else {
+//                SimpleDateFormat shortenedDayFormat = new SimpleDateFormat("EEE MMM dd");
+//                return  shortenedDayFormat.format(inputDate);
+//            }
+//        }
     }
+
+
 
     /**
      * Given a day, returns just the name to use for that day.
      * E.g "today", "tomorrow", "wednesday".
      *
      * @param context Context to use for resource localization
-     * @param dateStr The db formatted date string, expected to be of the form specified
-     *                in Utility.DATE_FORMAT
+     * @param dateInMillis The date in milliseconds
      * @return
      */
-    public static String getDayName(Context context, String dateStr) {
-        SimpleDateFormat dbDateFormat = new SimpleDateFormat(ForecastContract.DATE_FORMAT);
-        try {
-            Date inputDate = dbDateFormat.parse(dateStr);
-            Date todayDate = new Date();
-            // If the date is today, return the localized version of "Today" instead of the actual
-            // day name.
-            if (ForecastContract.getDbDateString(todayDate).equals(dateStr)) {
-                return context.getString(R.string.today);
-            } else {
-                // If the date is set for tomorrow, the format is "Tomorrow".
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(todayDate);
-                cal.add(Calendar.DATE, 1);
-                Date tomorrowDate = cal.getTime();
-                if (ForecastContract.getDbDateString(tomorrowDate).equals(
-                        dateStr)) {
-                    return context.getString(R.string.tomorrow);
-                } else {
-                    // Otherwise, the format is just the day of the week (e.g "Wednesday".
-                    SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE");
-                    return dayFormat.format(inputDate);
-                }
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-            // It couldn't process the date correctly.
-            return "";
+    public static String getDayName(Context context, long dateInMillis) {
+        android.text.format.Time t = new android.text.format.Time();
+        t.setToNow();
+        int julianDay = android.text.format.Time.getJulianDay(dateInMillis, t.gmtoff);
+        int currentJulianDay = android.text.format.Time.getJulianDay(System.currentTimeMillis(), t.gmtoff);
+        if (julianDay == currentJulianDay) {
+            return context.getString(R.string.today);
+        } else if (julianDay == currentJulianDay + 1) {
+            return context.getString(R.string.tomorrow);
+        } else {
+            android.text.format.Time time = new android.text.format.Time();
+            time.setToNow();
+            // other days of the week
+            SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE");
+            return dayFormat.format(dateInMillis);
         }
+
+
+//        SimpleDateFormat dbDateFormat = new SimpleDateFormat(ForecastContract.DATE_FORMAT);
+//        try {
+//            Date inputDate = dbDateFormat.parse(dateStr);
+//            Date todayDate = new Date();
+//            // If the date is today, return the localized version of "Today" instead of the actual
+//            // day name.
+//            if (ForecastContract.getDbDateString(todayDate).equals(dateStr)) {
+//                return context.getString(R.string.today);
+//            } else {
+//                // If the date is set for tomorrow, the format is "Tomorrow".
+//                Calendar cal = Calendar.getInstance();
+//                cal.setTime(todayDate);
+//                cal.add(Calendar.DATE, 1);
+//                Date tomorrowDate = cal.getTime();
+//                if (ForecastContract.getDbDateString(tomorrowDate).equals(
+//                        dateStr)) {
+//                    return context.getString(R.string.tomorrow);
+//                } else {
+//                    // Otherwise, the format is just the day of the week (e.g "Wednesday".
+//                    SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE");
+//                    return dayFormat.format(inputDate);
+//                }
+//            }
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//            // It couldn't process the date correctly.
+//            return "";
+//        }
     }
 
     /**

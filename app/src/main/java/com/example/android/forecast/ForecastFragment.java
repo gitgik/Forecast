@@ -148,13 +148,13 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        if (savedInstanceState != null && savedInstanceState.containsKey(LOCATION_KEY)) {
-            mLocation = savedInstanceState.getString(LOCATION_KEY);
-        }
-
-        if (savedInstanceState != null && savedInstanceState.containsKey(POSITION_KEY)) {
-            mPosition = savedInstanceState.getInt(POSITION_KEY);
-        }
+//        if (savedInstanceState != null && savedInstanceState.containsKey(LOCATION_KEY)) {
+//            mLocation = savedInstanceState.getString(LOCATION_KEY);
+//        }
+//
+//        if (savedInstanceState != null && savedInstanceState.containsKey(POSITION_KEY)) {
+//            mPosition = savedInstanceState.getInt(POSITION_KEY);
+//        }
 
         View rootView =  inflater.inflate(R.layout.fragment_main, container, false);
 
