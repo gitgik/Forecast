@@ -49,8 +49,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 
@@ -100,121 +99,242 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
         super(context, autoInitialize);
     }
 
-    public static void initializeSyncAdapter(Context context) {
-        getSyncAccount(context);
-    }
+    private void getWeatherForecastData (String locationQuery) {
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
 
-    /**
-     * Sets the location status into shared preferences. This function should be called from
-     * the UI thread because it commits to write to the Shared Preferences.
-      * @param context Context to get the PreferenceManager from
-     * @param locationStatus The IntDef value to set
-     */
-    static private void setLocationStatus(Context context, @LocationStatus int locationStatus) {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor spe = sp.edit();
-        spe.putInt(context.getString(R.string.pref_location_status_key), locationStatus);
-        spe.commit();
-    }
-
-
-
-    /**
-     * Performs a weather sync with the server to update the weather data
-     * @param account
-     * @param extras
-     * @param authority
-     * @param provider
-     * @param syncResult
-     */
-    @Override
-    public void onPerformSync(Account account, Bundle extras, String authority,
-                              ContentProviderClient provider, SyncResult syncResult) {
-        Log.d(LOG_TAG, "===========================>>>>  SYNCING ON PERFORM SYNC...");
-        String locationQuery = Utility.getPreferredLocation(getContext());
-        if (locationQuery == null || locationQuery.isEmpty()) {
-            return;
-        }
-        String weatherForecast = getWeatherForecastData(locationQuery);
+        // Will store the raw JSON response as a string.
+        String forecastJsonString = null;
+        String apiKey = "de07b800a0f30d675a6ceb7d9b30ce11";
 
         try {
-            getWeatherDataFromJson(weatherForecast, locationQuery);
-            // The location status is OK
+            // Construct URL for the OpenWeatherMap API
+            final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
+            final String QUERY_PARAM = "q";
+            final String FORMAT = "mode";
+            final String UNITS = "units";
+            final String DAYS = "cnt";
+            final String API_KEY = "APPID";
+
+            Uri buildUri = Uri.parse(FORECAST_URL).buildUpon()
+                    .appendQueryParameter(QUERY_PARAM, locationQuery)
+                    .appendQueryParameter(FORMAT, "json")
+                    .appendQueryParameter(UNITS, "metric")
+                    .appendQueryParameter(DAYS, "7")
+                    .appendQueryParameter(API_KEY, apiKey).build();
+
+            URL url = new URL(buildUri.toString());
+
+            Log.d("QUERYING URI: "+ LOG_TAG, buildUri.toString());
+
+            // Create the request to OpenWeatherMap and open the connection
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            // Read the input stream into a string
+            InputStream inputStream = urlConnection.getInputStream();
+            StringBuffer buffer = new StringBuffer();
+            if (inputStream == null) {
+                return;
+            }
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // add new line for easier debugging when printing it out
+                buffer.append(line + "\n");
+            }
+
+            if (buffer.length() == 0) {
+                // String is empty, no point in parsing. Return a server down status
+                setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
+                return;
+            }
+            forecastJsonString = buffer.toString();
+
+            getWeatherDataFromJson(forecastJsonString, locationQuery);
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "IO ERROR: ", e);
+            e.printStackTrace();
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "JSON ERROR: ", e);
+            e.printStackTrace();
+            setLocationStatus(getContext(),  LOCATION_STATUS_SERVER_INVALID);
+        }
+        finally{
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (final IOException e) {
+                    Log.e(LOG_TAG, "ERROR CLOSING STREAM", e);
+                }
+            }
+        }
+        return;
+    }
+
+    private void getWeatherDataFromJson(String forecastJsonString, String locationSetting) throws
+            JSONException {
+
+        // Location information
+        final String OWM_CITY = "city";
+        final String OWM_CITY_NAME = "name";
+        final String OWM_COORD = "coord";
+
+        // Location coordinates
+        final String OWM_LATITUDE = "lat";
+        final String OWM_LONGITUDE = "lon";
+
+        // Weather information. Each day's forecast info is an element of the "list" array
+        final String OWM_LIST = "list";
+
+        final String OWM_DATETIME = "dt";
+        final String OWM_PRESSURE = "pressure";
+        final String OWM_HUMIDITY = "humidity";
+        final String OWM_WINDSPEED = "speed";
+        final String OWM_WIND_DIRECTION = "deg";
+
+        // All temperatures are children of the "temp" object
+        final String OWM_TEMPERATURE = "temp";
+        final String OWM_MAX = "max";
+        final String OWM_MIN = "min";
+
+        final String OWM_WEATHER = "weather";
+        final String OWM_DESCRIPTION = "description";
+        final String OWM_WEATHER_ID = "id";
+
+        final String OWN_MESSAGE_CODE = "cod";
+
+        try {
+            JSONObject forecastJson = new JSONObject(forecastJsonString);
+
+            if (forecastJson.has(OWN_MESSAGE_CODE)) {
+                int errorCode = forecastJson.getInt(OWN_MESSAGE_CODE);
+
+                switch (errorCode) {
+                    case HttpURLConnection.HTTP_OK:
+                        break;
+                    case HttpURLConnection.HTTP_BAD_GATEWAY:
+                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
+                        return;
+                    case HttpURLConnection.HTTP_NOT_FOUND:
+                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
+                        return;
+                    default:
+                        setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
+                        return;
+                }
+            }
+
+            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
+
+            JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
+            String cityName = cityJson.getString(OWM_CITY_NAME);
+
+            JSONObject cityCoordinates = cityJson.getJSONObject(OWM_COORD);
+            double cityLatitude = cityCoordinates.getDouble(OWM_LATITUDE);
+            double cityLongitude = cityCoordinates.getDouble(OWM_LONGITUDE);
+
+            /** Insert the location into the database. */
+            long locationID = insertLocationIntoDB(
+                    locationSetting, cityName, cityLatitude, cityLongitude
+            );
+
+            // Get and insert the new weather information into the database
+            Vector<ContentValues> cVVector = new Vector<>(weatherArray.length());
+
+            // Returns the forecast based upon the local time of the city
+            // Use the GMT offset to translate this data properly
+            Time dayTime = new Time();
+            dayTime.setToNow();
+
+            // Start at the day returned by local time
+            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
+
+            // Work using UTC
+            dayTime = new Time();
+
+            for(int i = 0; i < weatherArray.length(); i++) {
+                //  These are the values that will be collected
+                long dateTime;
+                double pressure;
+                int humidity;
+                double windSpeed;
+                double windDirection;
+
+                double high;
+                double low;
+
+                String description;
+                int weatherId;
+
+                // Get the JSON object representing the day
+                JSONObject dayForecast = weatherArray.getJSONObject(i);
+
+                // CONVERT THIS TO UTC TIME
+                dateTime = dayTime.setJulianDay(julianStartDay+i);
+
+                GregorianCalendar calendar = new GregorianCalendar();
+                calendar.add(GregorianCalendar.DAY_OF_WEEK, i);
+//
+//                Date time = gc.getTime();
+//                SimpleDateFormat shortDateFormat = new SimpleDateFormat("EEE MMM dd");
+//                String day = shortDateFormat.format(time);
+
+
+                pressure = dayForecast.getDouble(OWM_PRESSURE);
+                humidity = dayForecast.getInt(OWM_HUMIDITY);
+                windSpeed = dayForecast.getDouble(OWM_WINDSPEED);
+                windDirection = dayForecast.getDouble(OWM_WIND_DIRECTION);
+
+                // description is in a child array called "weather", which is 1 element long.
+                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
+                description = weatherObject.getString(OWM_DESCRIPTION);
+                weatherId = weatherObject.getInt(OWM_WEATHER_ID);
+
+                // Temperatures are in a child object called "temp".  Try not to name variables
+                // "temp" when working with temperature.  It confuses everybody.
+                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
+                high = temperatureObject.getDouble(OWM_MAX);
+                low = temperatureObject.getDouble(OWM_MIN);
+
+                ContentValues weatherValues = new ContentValues();
+
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_LOC_KEY, locationID);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DATETEXT, dateTime);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_PRESSURE, pressure);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DEGREES, windDirection);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP, high);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP, low);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC, description);
+                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
+
+                cVVector.add(weatherValues);
+            }
+
+            int inserted = 0;
+
+            /** Insert weather data into database */
+            insertWeatherIntoDatabase(cVVector, julianStartDay);
+
+            Log.d(LOG_TAG, "Sync Complete. " + cVVector.size() + " Inserted");
             setLocationStatus(getContext(), LOCATION_STATUS_OK);
+
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
-            // The location status is server invalid
             setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         }
-    }
-
-    /**
-     * Helper method to have the sync adapter sync immediately
-     * @param context An app context
-     */
-    public static void syncImmediately(Context context) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-
-        ContentResolver.requestSync(
-                getSyncAccount(context), context.getString(R.string.content_authority), bundle);
-    }
-
-    public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
-        Account account = getSyncAccount(context);
-        String authority = context.getString(R.string.content_authority);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            // we can enable inexact timers in our sync
-            SyncRequest request = new SyncRequest.Builder()
-                    .syncPeriodic(syncInterval, flexTime)
-                    .setSyncAdapter(account, authority)
-                    .build();
-            ContentResolver.requestSync(request);
-        } else {
-            ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
-        }
-    }
-
-    /**
-     * Helper method to get the fake accounts to be used with
-     * the sync adapter if the fake account does not exist yet.
-     * @param context The context used to access the account service
-     * @return a fake account
-     */
-    public static Account getSyncAccount(Context context) {
-        AccountManager accManager =
-                (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
-        // Create the account type and default account
-        Account newAccount = new Account(
-                context.getString(R.string.app_name),
-                context.getString(R.string.sync_account_type));
-
-        // If pword does not exist, the account doesn't exist
-        if (accManager.getPassword(newAccount) == null) {
-            if (!accManager.addAccountExplicitly(newAccount, null, null)) {
-                return null;
-            }
-            // If you don't set android:syncable="true" in your <provider>
-            // then call context.setIsSyncable(account, AUTHORITY, 1) here
-            onAccountCreated(newAccount, context);
-        }
-        return newAccount;
-    }
 
 
-    private static void onAccountCreated(Account newAccount, Context context) {
-        // Since we created an account
-        ForecastSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
-
-         // Call setSyncAutomatically to enable our periodic sync
-        ContentResolver.setSyncAutomatically(
-                newAccount, context.getString(R.string.content_authority), true);
-
-        // Do a sync to get things started
-        syncImmediately(context);
     }
 
     private void notifyWeather() {
@@ -282,7 +402,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                                 .into(largeIconWidth, largeIconHeight) // fixed size
                                 .get();
 
-                                BitmapFactory.decodeResource(resources, artResourceId);
+                        BitmapFactory.decodeResource(resources, artResourceId);
                     } catch (InterruptedException | ExecutionException e) {
                         Log.e(LOG_TAG, "ERROR RETRIEVING LARGE ICON FROM " + artUrl, e);
                         largeIcon = BitmapFactory.decodeResource(resources, artResourceId);
@@ -292,17 +412,17 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
 
                     // Define the text of the forecast.
-                    String highFormat = Utility.formatTemperature(context, high, Utility.isMetric(context));
+                    String highFormat = Utility.formatTemperature(context, high);
                     String contextHeader = String.format(
                             context.getString(R.string.format_notification),
                             highFormat, locationQuery);
 
                     // Build our notification using the NotificationCompat.builder
                     NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
-                                    .setSmallIcon(iconId)
-                                    .setLargeIcon(largeIcon)
-                                    .setContentTitle(contextHeader)
-                                    .setContentText(description);
+                            .setSmallIcon(iconId)
+                            .setLargeIcon(largeIcon)
+                            .setContentTitle(contextHeader)
+                            .setContentText(description);
 
                     // Create an explicit intent for the main activity
                     Intent resultIntent = new Intent(context, MainActivity.class);
@@ -327,237 +447,7 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
                     editor.commit();
                 }
             }
-         }
-    }
-
-    private void getWeatherDataFromJson(String forecastJsonString, String locationSetting) throws
-            JSONException {
-        // These are the names of the JSON objects that need to be extracted.
-
-        // Location information
-        final String OWM_CITY = "city";
-        final String OWM_CITY_NAME = "name";
-        final String OWM_COORD = "coord";
-        final String OWM_COORD_LAT = "lat";
-        final String OWM_COORD_LONG = "lon";
-
-        // Weather information. Each day's forecast info is an element of the "list" array
-        final String OWM_LIST = "list";
-
-        final String OWM_DATETIME = "dt";
-        final String OWM_PRESSURE = "pressure";
-        final String OWM_HUMIDITY = "humidity";
-        final String OWM_WINDSPEED = "speed";
-        final String OWM_WIND_DIRECTION = "deg";
-
-        // All temperatures are children of the "temp" object
-        final String OWM_TEMPERATURE = "temp";
-        final String OWM_MAX = "max";
-        final String OWM_MIN = "min";
-
-        final String OWM_WEATHER = "weather";
-        final String OWM_DESCRIPTION = "description";
-        final String OWM_WEATHER_ID = "id";
-
-        final String OWN_MESSAGE_CODE = "cod";
-
-        try {
-            JSONObject forecastJson = new JSONObject(forecastJsonString);
-
-            if (forecastJson.has(OWN_MESSAGE_CODE)) {
-                int errorCode = forecastJson.getInt(OWN_MESSAGE_CODE);
-
-                switch (errorCode) {
-                    case HttpURLConnection.HTTP_OK:
-                        break;
-                    case HttpURLConnection.HTTP_BAD_GATEWAY:
-                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
-                        return;
-                    case HttpURLConnection.HTTP_NOT_FOUND:
-                        setLocationStatus(getContext(), LOCATION_STATUS_INVALID);
-                        return;
-                    default:
-                        setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
-                        return;
-                }
-            }
-
-            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
-
-            JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
-            String cityName = cityJson.getString(OWM_CITY_NAME);
-            JSONObject coordJSON = cityJson.getJSONObject(OWM_COORD);
-            double cityLatitude = coordJSON.getDouble(OWM_COORD_LAT);
-            double cityLongitude = coordJSON.getDouble(OWM_COORD_LONG);
-
-            /** Insert the location into the database. */
-            long locationID = insertLocationIntoDB(
-                    locationSetting, cityName, cityLatitude, cityLongitude
-            );
-
-            // Get and insert the new weather information into the database
-            Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
-
-            // Returns the forecast based upon the local time of the city
-            // Use the GMT offset to translate this data properly
-            Time dayTime = new Time();
-            dayTime.setToNow();
-
-            // Start at the day returned by local time
-            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
-
-            // Work using UTC
-            dayTime = new Time();
-
-            for(int i = 0; i < weatherArray.length(); i++) {
-                //  These are the values that will be collected
-
-                long dateTime;
-                double pressure;
-                int humidity;
-                double windSpeed;
-                double windDirection;
-
-                double high;
-                double low;
-
-                String description;
-                int weatherId;
-
-                // Get the JSON object representing the day
-                JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-                // The date/time is returned as a long.  We need to convert that
-                // into something human-readable, since most people won't read "1400356800" as
-                // "this saturday".
-                dateTime = dayForecast.getLong(OWM_DATETIME);
-                // CONVERT THIS TO UTC TIME
-                // dateTime = dayTime.setJulianDay(julianStartDay+i);
-
-//                GregorianCalendar gc = new GregorianCalendar();
-//                gc.add(GregorianCalendar.DATE, i);
-//
-//                Date time = gc.getTime();
-//                SimpleDateFormat shortDateFormat = new SimpleDateFormat("EEE MMM dd");
-//                String day = shortDateFormat.format(time);
-
-
-                pressure = dayForecast.getDouble(OWM_PRESSURE);
-                humidity = dayForecast.getInt(OWM_HUMIDITY);
-                windSpeed = dayForecast.getDouble(OWM_WINDSPEED);
-                windDirection = dayForecast.getDouble(OWM_WIND_DIRECTION);
-
-                // description is in a child array called "weather", which is 1 element long.
-                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-                description = weatherObject.getString(OWM_DESCRIPTION);
-                weatherId = weatherObject.getInt(OWM_WEATHER_ID);
-
-                // Temperatures are in a child object called "temp".  Try not to name variables
-                // "temp" when working with temperature.  It confuses everybody.
-                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
-                high = temperatureObject.getDouble(OWM_MAX);
-                low = temperatureObject.getDouble(OWM_MIN);
-
-                ContentValues weatherValues = new ContentValues();
-
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_LOC_KEY, locationID);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DATETEXT,
-                        ForecastContract.getDbDateString(new Date(dateTime * 1000L)));
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_PRESSURE, pressure);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_DEGREES, windDirection);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MAX_TEMP, high);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_MIN_TEMP, low);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_SHORT_DESC, description);
-                weatherValues.put(ForecastContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
-
-                cVVector.add(weatherValues);
-            }
-
-            /** Insert weather data into database */
-            insertWeatherIntoDatabase(cVVector);
-
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e);
-            e.printStackTrace();
-            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         }
-
-
-    }
-
-    private String getWeatherForecastData (String postalCode) {
-        HttpURLConnection urlConnection = null;
-        BufferedReader reader = null;
-
-        // Will store the raw JSON response as a string.
-        String forecastJsonString = null;
-        String apiKey = "de07b800a0f30d675a6ceb7d9b30ce11";
-
-        try {
-            // Construct URL for the OpenWeatherMap API
-            final String QUERY_PARAM = "q";
-            final String FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
-            final String FORMAT = "mode";
-            final String UNITS = "units";
-            final String DAYS = "cnt";
-            final String API_KEY = "APPID";
-
-            Uri buildUri = Uri.parse(FORECAST_URL).buildUpon()
-                    .appendQueryParameter(QUERY_PARAM, postalCode)
-                    .appendQueryParameter(FORMAT, "json")
-                    .appendQueryParameter(UNITS, "metric")
-                    .appendQueryParameter(DAYS, "7")
-                    .appendQueryParameter(API_KEY, apiKey).build();
-
-            URL url = new URL(buildUri.toString());
-
-            Log.d("*******"+ LOG_TAG, buildUri.toString());
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.connect();
-
-            // Read the input stream
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuffer buffer = new StringBuffer();
-            if (inputStream == null) {
-                return null;
-            }
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // add new line for easier debugging
-                buffer.append(line + "\n");
-            }
-
-            if (buffer.length() == 0) {
-                return  null;
-            }
-            forecastJsonString = buffer.toString();
-
-            // log the json string
-            Log.v(LOG_TAG, "JSON: " + forecastJsonString);
-
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "NETWORK ERROR: ", e);
-            e.printStackTrace();
-            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
-        } finally{
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (final IOException e) {
-                    Log.e(LOG_TAG, "CLOSING STREAM", e);
-                }
-            }
-        }
-
-        return forecastJsonString;
     }
 
     /**
@@ -571,69 +461,71 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
      * @return the row id of the location
      */
     private long insertLocationIntoDB(String locationSetting, String cityName, double lat, double lon) {
-
-        long rowId = 0;
+        long locationId;
 
         Log.v(LOG_TAG, "Inserting " + cityName + ", with coord: "
-                + lat + ", " + lon);
+                + lat + ", " + lon + " into the database...");
 
         //Check if the location exists in the db
         Cursor cursor = getContext().getContentResolver().query(
                 ForecastContract.LocationEntry.CONTENT_URI,
                 new String[]{ForecastContract.LocationEntry._ID},
                 ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
-                new String[]{locationSetting}, null
-        );
+                new String[]{locationSetting},
+                null);
 
         if (cursor != null && cursor.moveToFirst()) {
-
             Log.v(LOG_TAG, "Found city in the db");
-
             int locationIdIndex = cursor.getColumnIndex(ForecastContract.LocationEntry._ID);
-            rowId = cursor.getLong(locationIdIndex);
+            locationId = cursor.getLong(locationIdIndex);
 
         } else {
-
-            Log.v(LOG_TAG, "Didn't find it in the db. Inserting now...");
+            Log.v(LOG_TAG, "Didn't find it in the db. New Insert...");
 
             ContentValues locationValues = new ContentValues();
+            // Add data along with the corresponding name of the data type
+            // for the content provider to know what kind of data is being inserted
             locationValues.put(ForecastContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
             locationValues.put(ForecastContract.LocationEntry.COLUMN_CITY_NAME, cityName);
             locationValues.put(ForecastContract.LocationEntry.COLUMN_LATITUDE, lat);
             locationValues.put(ForecastContract.LocationEntry.COLUMN_LONGITUDE, lon);
 
-            Uri uri = getContext().getContentResolver().insert(
+            Uri insertedUri = getContext().getContentResolver().insert(
                     ForecastContract.LocationEntry.CONTENT_URI,
                     locationValues
             );
-            rowId =  ContentUris.parseId(uri);
-
+            // The resulting uri contains the id for the row. Extract the locationId from the Uri
+            locationId =  ContentUris.parseId(insertedUri);
         }
 
-        if (cursor != null) {
-            cursor.close();
-        }
+        cursor.close();
 
-        return rowId;
+        return locationId;
 
     }
 
-    private void insertWeatherIntoDatabase (Vector<ContentValues> vector) {
+    private void insertWeatherIntoDatabase (Vector<ContentValues> vector, int julianStartDay) {
+
+        // Returns the forecast based upon the local time of the city
+        // Use the GMT offset to translate this data properly
+        Time dayTime = new Time();
+        // Work using UTC
+        dayTime = new Time();
+
         if (vector.size() > 0) {
             ContentValues[] contentValuesArray = new ContentValues[vector.size()];
             vector.toArray(contentValuesArray);
+            getContext().getContentResolver().bulkInsert(
+                    WeatherEntry.CONTENT_URI, contentValuesArray);
 
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DATE, -1); // point to yesterday
+            String oldDay = Long.toString(dayTime.setJulianDay(julianStartDay-1));
 
-            String yesterdayDate = ForecastContract.getDbDateString(cal.getTime());
-            // DELETE records  that are more than a day old
+            // delete old data so we don't build up endless history
+            Log.d(LOG_TAG,
+                    "DELETING OLD RECORDS WITH " + WeatherEntry.COLUMN_DATETEXT + " <= ?" + oldDay);
             getContext().getContentResolver().delete(WeatherEntry.CONTENT_URI,
                     WeatherEntry.COLUMN_DATETEXT + " <= ?",
-                    new String[] { yesterdayDate });
-
-            int rowsInserted = getContext().getContentResolver().bulkInsert(
-                    ForecastContract.WeatherEntry.CONTENT_URI, contentValuesArray);
+                    new String[]{oldDay});
 
             if (DEBUG) {
                 Cursor weatherCursor = getContext().getContentResolver().query(
@@ -656,7 +548,132 @@ public class ForecastSyncAdapter extends AbstractThreadedSyncAdapter {
 
             // NOTIFICATION
             notifyWeather();
+
+            Log.d(LOG_TAG, "Sync Complete. " + vector.size() + " Inserted");
+            setLocationStatus(getContext(), LOCATION_STATUS_OK);
         }
+
+//        if (vector.size() > 0) {
+//            ContentValues[] contentValuesArray = new ContentValues[vector.size()];
+//            vector.toArray(contentValuesArray);
+
+//            Calendar cal = Calendar.getInstance();
+//            cal.add(Calendar.DATE, -1); // point to yesterday
+//
+//            String yesterdayDate = ForecastContract.getDbDateString(cal.getTime());
+//            // DELETE records  that are more than a day old
+//            getContext().getContentResolver().delete(WeatherEntry.CONTENT_URI,
+//                    WeatherEntry.COLUMN_DATETEXT + " <= ?",
+//                    new String[] { yesterdayDate });
+//        }
+
+    }
+
+    /**
+     * Performs a weather sync with the server to update the weather data
+     * @param account
+     * @param extras
+     * @param authority
+     * @param provider
+     * @param syncResult
+     */
+    @Override
+    public void onPerformSync(Account account, Bundle extras, String authority,
+                              ContentProviderClient provider, SyncResult syncResult) {
+        Log.d(LOG_TAG, "===========================>>>>  STARTING SYNC...");
+        Context context = getContext();
+        String locationQuery = Utility.getPreferredLocation(context);
+        if (locationQuery == null || locationQuery.isEmpty()) {
+            return;
+        }
+        getWeatherForecastData(locationQuery);
+    }
+
+    /**
+     * Helper method to have the sync adapter sync immediately
+     * @param context An app context
+     */
+    public static void syncImmediately(Context context) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        ContentResolver.requestSync(getSyncAccount(context),
+                context.getString(R.string.content_authority), bundle);
+    }
+
+    public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
+        Account account = getSyncAccount(context);
+        String authority = context.getString(R.string.content_authority);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            // we can enable inexact timers in our sync
+            SyncRequest request = new SyncRequest.Builder()
+                    .syncPeriodic(syncInterval, flexTime)
+                    .setSyncAdapter(account, authority)
+                    .build();
+            ContentResolver.requestSync(request);
+        } else {
+            ContentResolver.addPeriodicSync(account, authority, new Bundle(), syncInterval);
+        }
+    }
+
+    /**
+     * Helper method to get the fake accounts to be used with
+     * the sync adapter if the fake account does not exist yet.
+     * If we maje a new account, we call the onAccountCreated method so we can initialize things.
+     * @param context The context used to access the account service
+     * @return a fake account
+     */
+    public static Account getSyncAccount(Context context) {
+        // Get an instance of the android account manager
+        AccountManager accManager =
+                (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
+
+        // Create the account type and default account
+        Account newAccount = new Account(
+                context.getString(R.string.app_name),
+                context.getString(R.string.sync_account_type));
+
+        // If pword does not exist, the account doesn't exist
+        if (accManager.getPassword(newAccount) == null) {
+            if (!accManager.addAccountExplicitly(newAccount, null, null)) {
+                return null;
+            }
+            // If you don't set android:syncable="true" in your <provider>
+            // then call context.setIsSyncable(account, AUTHORITY, 1) here
+            onAccountCreated(newAccount, context);
+        }
+        return newAccount;
+    }
+
+
+    private static void onAccountCreated(Account newAccount, Context context) {
+        // Since we created an account
+        ForecastSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
+
+         // Call setSyncAutomatically to enable our periodic sync
+        ContentResolver.setSyncAutomatically(
+                newAccount, context.getString(R.string.content_authority), true);
+
+        // Do a sync to get things started
+        syncImmediately(context);
+    }
+
+    public static void initializeSyncAdapter(Context context) {
+        getSyncAccount(context);
+    }
+
+    /**
+     * Sets the location status into shared preferences. This function should be called from
+     * the UI thread because it commits to write to the Shared Preferences.
+     * @param context Context to get the PreferenceManager from
+     * @param locationStatus The IntDef value to set
+     */
+    static private void setLocationStatus(Context context, @LocationStatus int locationStatus) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(context.getString(R.string.pref_location_status_key), locationStatus);
+        spe.commit();
     }
 
 }
