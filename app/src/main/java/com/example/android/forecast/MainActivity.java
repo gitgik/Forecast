@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
             ActivityOptionsCompat activityOptions =
                     ActivityOptionsCompat.makeSceneTransitionAnimation(this,
                             new Pair<View, String>(
-                                    vh.iconView, getString(R.string.detail_icon_transition_name)));
+                                    vh.mIconView, getString(R.string.detail_icon_transition_name)));
             ActivityCompat.startActivity(this, intent, activityOptions.toBundle());
         }
     }

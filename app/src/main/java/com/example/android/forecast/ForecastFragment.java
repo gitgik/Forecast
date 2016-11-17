@@ -1,6 +1,8 @@
 package com.example.android.forecast;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,12 +13,15 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -31,10 +36,15 @@ import com.example.android.forecast.sync.ForecastSyncAdapter;
 public class ForecastFragment extends Fragment  implements LoaderManager.LoaderCallbacks<Cursor>,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
+    public static final String LOG_TAG = ForecastFragment.class.getSimpleName();
     private String mLocation;
     private RecyclerView mRecyclerView;
     private int mPosition = RecyclerView.NO_POSITION;
     private boolean mUseTodayLayout;
+    private int mChoiceMode;
+    private long mInitialSelectedDate = -1;
+    private boolean mHoldForTransition;
+    private boolean mAutoSelectView;
     private ForecastAdapter mForecastAdapter;
     private static final String SELECTED_KEY = "selected_position";
 
@@ -127,8 +137,8 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         // Register the on shared preference listener
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sp.registerOnSharedPreferenceChangeListener(this);
-        // Check if our location has changed to update the weather
         super.onResume();
+
         if (mLocation != null && !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
             // restart our loader
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
@@ -143,6 +153,16 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
         super.onPause();
     }
 
+    @Override
+    public void onInflate(Context context, AttributeSet attrs, Bundle savedInstanceState) {
+        super.onInflate(context, attrs, savedInstanceState);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ForecastFragment,
+                0, 0);
+        mChoiceMode = a.getInt(R.styleable.ForecastFragment_android_choiceMode, AbsListView.CHOICE_MODE_NONE);
+        mAutoSelectView = a.getBoolean(R.styleable.ForecastFragment_autoSelectView, false);
+        mHoldForTransition = a.getBoolean(R.styleable.ForecastFragment_sharedElementTransitions, false);
+        a.recycle();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -179,7 +199,7 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
                         ForecastContract.WeatherEntry.buildWeatherLocationWithDate(location, date), viewHolder);
                 mPosition = viewHolder.getAdapterPosition();
             }
-        }, emptyView);
+        }, emptyView, mChoiceMode);
 
 //        listView.setEmptyView(emptyView);
 
@@ -236,14 +256,13 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // This is called when a new loader needs to be created.
 
-        // Get current date
-        Long currentDate = System.currentTimeMillis();
-
         // Sort order: Ascending, by date.
         String sortOrder = WeatherEntry.COLUMN_DATETEXT + " ASC";
         mLocation = Utility.getPreferredLocation(getActivity());
-
-        Uri weatherLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(mLocation, currentDate);
+        Long currentTime = System.currentTimeMillis();
+        Log.d(LOG_TAG, "CURRENT TIME IS: " + currentTime);
+        Uri weatherLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(
+                mLocation, currentTime);
 
         Log.v("*** Forecast Fragment: ", "URI: " + weatherLocationUri.toString());
 
@@ -266,6 +285,43 @@ public class ForecastFragment extends Fragment  implements LoaderManager.LoaderC
             getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
         }
         updateEmptyView();
+        if (data.getCount() == 0) {
+            getActivity().supportStartPostponedEnterTransition();
+        } else {
+            mRecyclerView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    // Keep the listener around until we see children
+                    if (mRecyclerView.getChildCount() > 0) {
+                        mRecyclerView.getViewTreeObserver().removeOnPreDrawListener(this);
+                        int position = mForecastAdapter.getSelectedItemPosition();
+                        if (position == RecyclerView.NO_POSITION && -1 != mInitialSelectedDate) {
+                            Cursor data = mForecastAdapter.getCursor();
+                            int count = data.getCount();
+                            int dateColumn = data.getColumnIndex(WeatherEntry.COLUMN_DATETEXT);
+                            for (int i = 0; i < count; i++) {
+                                data.moveToPosition(i);
+                                if (data.getLong(dateColumn) == mInitialSelectedDate) {
+                                    position = i;
+                                    break;
+                                }
+                            }
+                        }
+                        if (position == RecyclerView.NO_POSITION) position = 0;
+                        mRecyclerView.smoothScrollToPosition(position);
+                        RecyclerView.ViewHolder viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position);
+                        if (null != viewHolder && mAutoSelectView) {
+                            mForecastAdapter.selectView(viewHolder);
+                        }
+                        if (mHoldForTransition) {
+                            getActivity().supportStartPostponedEnterTransition();
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
     }
 
     @Override
