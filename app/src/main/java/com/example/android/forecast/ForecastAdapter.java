@@ -2,6 +2,8 @@ package com.example.android.forecast;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Bundle;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,41 +20,6 @@ import com.example.android.forecast.data.ForecastContract;
 
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHolder> {
 
-    /**
-     * Cache the child views for a forecast list item
-     */
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        public final ImageView iconView;
-        public final TextView dateView;
-        public final TextView descriptionView;
-        public final TextView highView;
-        public final TextView lowView;
-
-        public ViewHolder(View view) {
-            super(view);
-            iconView = (ImageView) view.findViewById(R.id.list_item_icon);
-            dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
-            descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
-            highView = (TextView) view.findViewById(R.id.list_item_high_textview);
-            lowView = (TextView) view.findViewById(R.id.list_item_low_textview);
-            view.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            int adapterPosition = getAdapterPosition();
-            mCursor.moveToPosition(adapterPosition);
-            int dateColumnIndex = mCursor.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DATETEXT);
-            mClickHandler.onClick(mCursor.getLong(dateColumnIndex), this);
-        }
-
-
-    }
-
-    public static interface ForecastAdapterOnClickHandler {
-        void onClick(Long date, ViewHolder viewHolder);
-    }
-
     public final String TAG = ForecastAdapter.class.getSimpleName();
 
     private final int VIEW_TYPE_TODAY = 0;
@@ -64,21 +31,61 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
     private final Context mContext;
     private ForecastAdapterOnClickHandler mClickHandler;
     private final View mEmptyView;
+    final private ItemChoiceManager mICM;
 
-    public ForecastAdapter (Context context, ForecastAdapterOnClickHandler clickHandler, View emptyView) {
+    /**
+     * Cache the child views for a forecast list item
+     */
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        public final ImageView mIconView;
+        public final TextView mDateView;
+        public final TextView mDescriptionView;
+        public final TextView mHighTempView;
+        public final TextView mLowTempView;
+
+        public ViewHolder(View view) {
+            super(view);
+            mIconView = (ImageView) view.findViewById(R.id.list_item_icon);
+            mDateView = (TextView) view.findViewById(R.id.list_item_date_textview);
+            mDescriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+            mHighTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
+            mLowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
+            view.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int adapterPosition = getAdapterPosition();
+            mCursor.moveToPosition(adapterPosition);
+            int dateColumnIndex = mCursor.getColumnIndex(ForecastContract.WeatherEntry.COLUMN_DATETEXT);
+            mClickHandler.onClick(mCursor.getLong(dateColumnIndex), this);
+            // Item Choice manager onclick listener
+            mICM.onClick(this);
+        }
+
+
+    }
+
+    public static interface ForecastAdapterOnClickHandler {
+        void onClick(Long date, ViewHolder viewHolder);
+    }
+
+    public ForecastAdapter (Context context, ForecastAdapterOnClickHandler clickHandler, View emptyView, int choiceMode) {
         mContext = context;
         mClickHandler = clickHandler;
         mEmptyView = emptyView;
+        mICM = new ItemChoiceManager(this);
+        mICM.setChoiceMode(choiceMode);
     }
 
 
-    public void setUseTodayLayout(boolean useTodayLayout) {
-        mUseTodayLayout = useTodayLayout;
-    }
+//    public void setUseTodayLayout(boolean useTodayLayout) {
+//        mUseTodayLayout = useTodayLayout;
+//    }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (parent instanceof RecyclerView) {
+    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        if (viewGroup instanceof RecyclerView) {
             int layoutId = -1;
             switch (viewType) {
                 case VIEW_TYPE_TODAY: {
@@ -90,17 +97,18 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
                     break;
                 }
             }
-            View view = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(layoutId, viewGroup, false);
             view.setFocusable(true);
             return new ViewHolder(view);
         } else {
-            throw new RuntimeException("Not bound to RecyclerViewSelection");
+            throw new RuntimeException("Not bound to RecyclerView");
         }
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         mCursor.moveToPosition(position);
+        boolean useLongToday;
         int weatherId = mCursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID);
         int defaultImage;
 
@@ -111,7 +119,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
                         .load(Utility.getArtUrlForWeatherCondition(mContext, weatherId))
                         .error(defaultImage)
                         .crossFade()
-                        .into(viewHolder.iconView);
+                        .into(viewHolder.mIconView);
+                useLongToday = true;
                 break;
             default:
                 defaultImage = Utility.getIconResourceForWeatherCondition(weatherId);
@@ -119,16 +128,26 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
                         .load(Utility.getArtUrlForWeatherCondition(mContext, weatherId))
                         .error(defaultImage)
                         .crossFade()
-                        .into(viewHolder.iconView);
+                        .into(viewHolder.mIconView);
+                useLongToday = false;
         }
 
-        String dateInMillis = mCursor.getString(ForecastFragment.COL_WEATHER_DATE);
-        viewHolder.dateView.setText(Utility.getFriendlyDayString(mContext, dateInMillis));
+        // this enables better animations. even if we lose state due to a device rotation,
+        // the animator can use this to re-find the original view
+        ViewCompat.setTransitionName(viewHolder.mIconView, "mIconView" + position);
+
+//        String dateInMillis = mCursor.getString(ForecastFragment.COL_WEATHER_DATE);
+        long dateInMillis = mCursor.getLong(ForecastFragment.COL_WEATHER_DATE);
+
+
+        viewHolder.mDateView.setText(Utility.getFriendlyDayString(mContext, dateInMillis, useLongToday));
 
         // Read weather forecast from cursor
-        String description = mCursor.getString(ForecastFragment.COL_WEATHER_DESC);
-        viewHolder.descriptionView.setText(description);
-        viewHolder.descriptionView.setContentDescription(
+//        String description = mCursor.getString(ForecastFragment.COL_WEATHER_DESC);
+        String description = Utility.getStringForWeatherCondition(mContext, weatherId);
+
+        viewHolder.mDescriptionView.setText(description);
+        viewHolder.mDescriptionView.setContentDescription(
                 mContext.getString(R.string.a11y_forecast,description));
 
 
@@ -137,17 +156,33 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 
         // Read the temperature from the cursor.
         double high = mCursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP);
-        String highTemp = Utility.formatTemperature(mContext, high, isMetric);
-        viewHolder.highView.setText(highTemp);
-        viewHolder.highView.setContentDescription(mContext.getString(
+        String highTemp = Utility.formatTemperature(mContext, high);
+        viewHolder.mHighTempView.setText(highTemp);
+        viewHolder.mHighTempView.setContentDescription(mContext.getString(
                 R.string.a11y_high_temp, description));
 
         double low = mCursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP);
-        String lowTemp = Utility.formatTemperature(mContext, low, isMetric);
-        viewHolder.lowView.setText(lowTemp);
-        viewHolder.lowView.setContentDescription(mContext.getString(R.string.a11y_low_temp, lowTemp));
+        String lowTemp = Utility.formatTemperature(mContext, low);
+        viewHolder.mLowTempView.setText(lowTemp);
+        viewHolder.mLowTempView.setContentDescription(mContext.getString(R.string.a11y_low_temp, lowTemp));
 
+        mICM.onBindViewHolder(viewHolder, position);
+    }
 
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        mICM.onRestoreInstanceState(savedInstanceState);
+    }
+
+    public void onSaveInstanceState(Bundle outState) {
+        mICM.onSaveInstanceState(outState);
+    }
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        mUseTodayLayout = useTodayLayout;
+    }
+
+    public int getSelectedItemPosition() {
+        return mICM.getSelectedItemPosition();
     }
 
     @Override
@@ -168,7 +203,14 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
         mEmptyView.setVisibility(getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
-//    public Cursor getCursor() { return mCursor; }
+    public Cursor getCursor() { return mCursor; }
+
+    public void selectView(RecyclerView.ViewHolder viewHolder) {
+        if (viewHolder instanceof ViewHolder) {
+            ViewHolder vfh = (ViewHolder) viewHolder;
+            vfh.onClick(vfh.itemView);
+        }
+    }
 
 //    @Override
 //    public int getViewTypeCount() {
@@ -224,7 +266,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 //                        .load(Utility.getArtUrlForWeatherCondition(context, weatherId))
 //                        .error(defaultImage)
 //                        .crossFade()
-//                        .into(viewHolder.iconView);
+//                        .into(viewHolder.mIconView);
 //                break;
 //            }
 //            default: {
@@ -235,7 +277,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 //                        .load(Utility.getArtUrlForWeatherCondition(context, weatherId))
 //                        .error(defaultImage)
 //                        .crossFade()
-//                        .into(viewHolder.iconView);
+//                        .into(viewHolder.mIconView);
 //                break;
 //            }
 //        }
@@ -248,16 +290,16 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ViewHo
 //
 //        // Read weather forecast from cursor
 //        String description = cursor.getString(ForecastFragment.COL_WEATHER_DESC);
-//        viewHolder.descriptionView.setText(description);
+//        viewHolder.mDescriptionView.setText(description);
 //
 //        //Read user preference for temperature units
 //        boolean isMetric = Utility.isMetric(context);
 //
 //        float high = cursor.getFloat(ForecastFragment.COL_WEATHER_MAX_TEMP);
-//        viewHolder.highView.setText(Utility.formatTemperature(context, high, isMetric));
+//        viewHolder.mHighTempView.setText(Utility.formatTemperature(context, high, isMetric));
 //
 //        float low = cursor.getFloat(ForecastFragment.COL_WEATHER_MIN_TEMP);
-//        viewHolder.lowView.setText(Utility.formatTemperature(context, low, isMetric));
+//        viewHolder.mLowTempView.setText(Utility.formatTemperature(context, low, isMetric));
 //
 //    }
 }
