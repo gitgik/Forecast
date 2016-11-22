@@ -295,7 +295,6 @@ public class  DetailActivityFragment extends Fragment implements LoaderManager.L
                     description,
                     high,
                     low);
-
         }
 
         AppCompatActivity activity = (AppCompatActivity)getActivity();
