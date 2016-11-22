@@ -17,3 +17,13 @@ Forecast also gives you the convenience to tweak the settings – enabling notif
 
 <img width="288" alt="screenshot 2016-11-22 14 04 38" src="https://cloud.githubusercontent.com/assets/15085180/20522119/99d3047c-b0bf-11e6-9257-ca3e03f3c34f.png">
 
+#### Map Integration
+Forecast also integrated a map intent to allow viewing your city's location.
+
+<img width="288" alt="screenshot 2016-11-22 14 05 26" src="https://cloud.githubusercontent.com/assets/15085180/20522955/de7bd000-b0c3-11e6-8d91-be741a78d143.png">
+
+
+### Todo
+* Integrate your phone's location to automagically update the city's weather forecast
+* Adding ads at the bottom of main activity
+* Sharing weather data with other apps
