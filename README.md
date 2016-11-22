@@ -4,6 +4,7 @@ A real-time weather forecast app with material design at heart.
 #### Home
 A weeks weather forecast for the city in one place. Forecast allows you to view an accurate summary of
 the weather forecast for the whole week.
+
 <img width="287" alt="screenshot 2016-11-22 14 03 20" src="https://cloud.githubusercontent.com/assets/15085180/20522023/207a13d6-b0bf-11e6-9b94-ccf658230504.png">
 
 #### Details activity
